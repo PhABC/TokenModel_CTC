@@ -15,13 +15,13 @@ function [stim,stimInfo] = stimCreation()
 %   stimInfo = Structure containing logical indexes and category names 
 
 %% Stimuli creation 
-binStim = dec2bin(0:2^15-1);  %All combinations containing 15 T (except 100%)
-binStim = binStim - 48;       %Split numbers into different column
+binStim = dec2bin(0:2^15-1);  % All combinations containing 15 T (except 100%)
+binStim = binStim - 48;       % Split numbers into different column
 
-count   = triu(ones(15,15));  %to count number of right token at each t
-nbRight = binStim*count;      %Nb of tokens to the right at each t
-nbLeft  = ~binStim*count;     %Nb of tokens to the left at each t
-stim    = nbRight - nbLeft;   %nb Tok right - left at each t
+count   = triu(ones(15,15));  % To count number of right token at each t
+nbRight = binStim*count;      % Nb of tokens to the right at each t
+nbLeft  = ~binStim*count;     % Nb of tokens to the left at each t
+stim    = nbRight - nbLeft;   % Nb Tok right - left at each t
 
 
 %% Calculating the probability of success
