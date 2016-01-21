@@ -73,8 +73,8 @@ for c = 1:length(stimInfo.def)       %Skipping category 'Others'
     nonclass = nonclass - stimInfo.logIdx{c}; %Every trial that is not classified
 end
 
-stimInfo.logIdx{end} = nonclass;              %Saving in the 'Others' class
-stimInfo.idx{end}    = find(stimInfo.logIdx{end} == 1);
+stimInfo.logIdx{end+1} = nonclass;              %Saving in the 'Others' class
+stimInfo.idx{end+1}    = find(stimInfo.logIdx{end} == 1);
 
 end
 
@@ -95,13 +95,13 @@ kSum   = zeros(size(k));                   %Hold the sum of binomial coef
 
 
 %Calculate the sum of the almost binomial coefficients 
-parpool
+pool = parpool;
 parfor i = 1:15
        
        subKsum = zeros(length(k),1);      
        for j = 1:length(k) 
            subKsum(j) = sum(1./ (factorial( 0 : k(j,i) ) .* ...
-                                 factorial( (Nc(j,i) - (0 : k(j,i) )) )) ); 
+                                 factorial( (Nc(j,i) - (0 : k(j,i) )) )) );                    
        end
        kSum(:,i) = subKsum;
        
@@ -112,4 +112,3 @@ delete(gcp)
 probR   = factorial(Nc) ./ (2.^Nc) .* kSum ;  
       
 end
-
