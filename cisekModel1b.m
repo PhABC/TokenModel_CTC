@@ -112,7 +112,7 @@ M2 = zeros(N,T);
 Y1 = zeros(N,1);
 Y2 = zeros(N,1);
 
-%MAIN FOR LOOP
+%% SIMULATION
 for s=1:T/dt
     t = (s-1)*dt;        % Current time in ms
     
