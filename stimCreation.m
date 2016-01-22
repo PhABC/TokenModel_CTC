@@ -96,7 +96,7 @@ kSum   = zeros(size(k));                   %Hold the sum of binomial coef
 
 %Calculate the sum of the almost binomial coefficients 
 
-% NO AMBIGOUS SO FAR ?? ONLY 8 UNIQUE PROB AT T = 7 %
+% NO AMBIGOUS SO FAR ?? ONLY 8 UNIQUE PROB AT T = 7, verify with David
 pool = parpool;
 parfor i = 1:15
        
