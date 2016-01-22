@@ -1,0 +1,22 @@
+DATE : 22/01/2016
+
+Tasks :
+	PC :
+		1. Modularisation of the model
+		2. 3 different trial types
+		3. Attractor behaviors
+
+Deadline :1-2/02/2015
+
+
+Meeting notes:
+	+ Make the model more attractor (could be activity too low)
+	+ Urgency looks additive at neuron level, but 
+		multiplicative at the behavior level.
+	+ Start with multiplicative urgency 
+	+ Linear urgency signal from data (depends on trial types)
+	+ Using trials from data
+	+ Will need to optimize code eventually
+	+ Interesting question : how is the linear distance in input maintained
+	+ Treshold with difference in activity (PMD)  (perhaps 16 Hz)
+	+ 2 regions identical for now
