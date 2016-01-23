@@ -59,7 +59,7 @@ for c = 1:length(stimInfo.def)       %Skipping category 'Others'
     B = repmat(stimInfo.def{c}(1,:),stimInfo.nbStim,1); %Bigger than matrix
     B(:,~any(B)) = probR(:,~any(B));  %Take real value when no conditions
     
-    S = repmat(stimInfo.def{c}(3,:),stimInfo.nbStim,1); %Smaller than matrix
+    S = repmat(stimInfo.def{c}(2,:),stimInfo.nbStim,1); %Smaller than matrix
     S(:,~any(S)) = probR(:,~any(S));  %Take real value when no conditions
     
     logMat             = probR >= B & probR <= S; %Apply conditions
@@ -91,7 +91,7 @@ kSum   = zeros(size(k));                   %Hold the sum of binomial coef
 
 
 %Calculate the sum of the almost binomial coefficients 
-pool = parpool;     %Comment out if no parralell computing
+parpool;            %Comment out if no parralell computing
 parfor i = 1:15     %Change 'parfor' to 'for' if no parralell computing
        
        subKsum = zeros(length(k),1);      
