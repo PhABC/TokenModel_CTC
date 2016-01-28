@@ -1,4 +1,4 @@
-function [stim,stimInfo] = stimCreation()
+function [Stim] = stimCreation()
 %% StimCreation description
 %   This function will generate 2^15 unique stimuli based on the token
 %   task (see Paul Cisek work). Each stimuli will be composed of 15 tokens
@@ -21,12 +21,14 @@ binStim = binStim - 48;       % Split numbers into different column
 count   = triu(ones(15,15));  % To count number of right token at each t
 nbRight = binStim*count;      % Nb of tokens to the right at each t
 nbLeft  = ~binStim*count;     % Nb of tokens to the left at each t
-stim    = nbRight - nbLeft;   % Nb Tok right - left at each t
+
+Stim.stimRaw  = nbRight - nbLeft;   % Nb Tok right - left at each t
+Stim.stimRawR = Stim.stimRaw(Stim.stimRaw(:,end)>0,:);
 
 
 %% Calculating the probability of success
-probR          = probRight(nbRight); %Probability if answer right (>0)
-stimInfo.probR = probR; 
+nbRightR   = nbRight(Stim.stimRaw(:,end)>0,:);
+probR      = probRight(nbRightR);             %Probability if answer right (>0)
 
 %% Stimulis classification
 %Defining the rules for each category
@@ -36,41 +38,46 @@ stimInfo.probR = probR;
     % No 'Equal to' condition because of numerical instability. Would need
     %       add an error margin of epsilon if ever desired.
  
-stimInfo.defName = { 'Easy' 'Misleading' 'Ambiguous' 'Others' } ; 
-stimInfo.nbStim   = 2^15;
+Stim.defName = { 'Easy' 'Misleading' 'Ambiguous' 'Others' } ; 
+Stim.nbStimR = 2^15/2;
     
 %Easy trials
-stimInfo.def{1}  = [ 0, 0.6, 0,0, 0.75, 0,0, 0.75, 0, 0.8, 0,0, 0.9, 0,0  ; ...
-                     0,  0,  0,0,   0,  0,0,   0,  0,  0,  0,0,  0,  0,0 ];
+Stim.def{1}  = [ 0, 0.6, 0,0, 0.75, 0,0, 0.75, 0, 0.8, 0,0, 0.9, 0, 0.5  ; ...
+                 0,  0,  0,0,   0,  0,0,   0,  0,  0,  0,0,  0,  0,  0  ];
 
 %Misleading trials                      
-stimInfo.def{2}  = [ 0,0,  0,  0,0,0,0,0,0,0,0,0,0,0,0  ; ...
-                     0,0, 0.4, 0,0,0,0,0,0,0,0,0,0,0,0 ];
+Stim.def{2}  = [ 0,0,  0,  0,0,0,0,0,0,0,0,0,0,0, 0.5 ; ...
+                 0,0, 0.4, 0,0,0,0,0,0,0,0,0,0,0,  0 ];
 
 %Ambiguous trials
-stimInfo.def{3}  = [ 0,  0.4, 0.38 ,0, 0.55, 0, 0.55, 0,0,0,0,0,0,0,0  ; ...
-                     0,  0.6, 0.65, 0, 0.66, 0, 0.66, 0,0,0,0,0,0,0,0 ];
+Stim.def{3}  = [ 0,  0.4, 0.38 ,0, 0.55, 0, 0.55, 0,0,0,0,0,0,0, 0.5  ; ...
+                 0,  0.6, 0.65, 0, 0.66, 0, 0.66, 0,0,0,0,0,0,0,  0  ];
 
 %Classifying                
-nonclass = ones(stimInfo.nbStim ,1);
+nonclass = ones(Stim.nbStimR ,1);
 
-for c = 1:length(stimInfo.def)       %Skipping category 'Others'
+for c = 1:length(Stim.def)       %Skipping category 'Others'
     %Conditions for each categories
-    B = repmat(stimInfo.def{c}(1,:),stimInfo.nbStim,1); %Bigger than matrix
-    B(:,~any(B)) = probR(:,~any(B));  %Take real value when no conditions
+    B = repmat(Stim.def{c}(1,:),Stim.nbStimR,1); %Bigger than matrix
+    B(:,~any(B)) = probR(:,~any(B));               %Take real value when no conditions
     
-    S = repmat(stimInfo.def{c}(2,:),stimInfo.nbStim,1); %Smaller than matrix
-    S(:,~any(S)) = probR(:,~any(S));  %Take real value when no conditions
+    S = repmat(Stim.def{c}(2,:),Stim.nbStimR,1); %Smaller than matrix
+    S(:,~any(S)) = probR(:,~any(S));               %Take real value when no conditions
     
-    logMat             = probR >= B & probR <= S; %Apply conditions
-    stimInfo.logIdx{c} = all(logMat,2);                        %idx with logic array
-    stimInfo.idx{c}    = find(stimInfo.logIdx{c} == 1);        %idx with trial nb     
+    logMat         = probR >= B & probR <= S;      %Apply conditions
+    Stim.logIdx{c} = all(logMat,2);                %idx with logic array
+    Stim.idx{c}    = find(Stim.logIdx{c} == 1);    %idx with trial nb     
     
-    nonclass = nonclass - stimInfo.logIdx{c}; %Every trial that is not classified
+    nonclass = nonclass - Stim.logIdx{c}; %Every trial that is not classified
 end
 
-stimInfo.logIdx{end+1} = nonclass;              %Saving in the 'Others' class
-stimInfo.idx{end+1}    = find(stimInfo.logIdx{end} == 1);
+Stim.logIdx{end+1} = nonclass;              %Saving in the 'Others' class
+Stim.idx{end+1}    = find(Stim.logIdx{end} == 1);
+
+Stim.nbStim{1} = length(Stim.idx{1});
+Stim.nbStim{2} = length(Stim.idx{2});
+Stim.nbStim{3} = length(Stim.idx{3});
+Stim.nbStim{4} = length(Stim.idx{4});
 
 end
 
@@ -91,8 +98,8 @@ kSum   = zeros(size(k));                   %Hold the sum of binomial coef
 
 
 %Calculate the sum of the almost binomial coefficients 
-parpool;            %Comment out if no parralell computing
-parfor i = 1:15     %Change 'parfor' to 'for' if no parralell computing
+% parpool;            %Comment out if no parralell computing
+for i = 1:15          %Change 'parfor' to 'for' if no parralell computing
        
        subKsum = zeros(length(k),1);      
        for j = 1:length(k) 
@@ -102,7 +109,7 @@ parfor i = 1:15     %Change 'parfor' to 'for' if no parralell computing
        kSum(:,i) = subKsum;
        
 end
-delete(gcp)         %Comment out if no parralell computing
+% delete(gcp)         %Comment out if no parralell computing
 
 %Calculates the success probabilities
 probR   = factorial(Nc) ./ (2.^Nc) .* kSum ;  
