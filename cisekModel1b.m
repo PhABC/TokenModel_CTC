@@ -5,12 +5,26 @@ close all;
 warning off all;
 
 %% Simulation parameters
+S.N     = 50;    % Nb of neurons
+S.T     = 1000;  % Simulation time in ms
+S.start = 100;   % Start of trial in ms
+S.dt    = 1;     % Time step in ms
+S.tau   = 0.005; % Time constant
 
-S.N   = 50;     % Nb of neurons
-S.T   = 500;    % Simulation time
-S.dt  = 1;      % Time step in milliseconds
-S.tau = 0.005;  % 
+% Stimuli parameters
+S.c     = 1;     % type : 1 = easy ~ 2 = misleading ~ 3 = ambiguous
+S.nbEx  = 1000;  % Number of stimuli examples to present
+S.jumpT = 50;    % interval between each jumps in ms (verify if work with T)
+S.stimW = 0.05;  % Amplitude of stimuli
 
+% Input parameters
+S.bias = 0.5;   % Additive bias
+S.G    = 0.2;   % Noise amplitude
+
+%Expanding time with dt
+S.T     = int16(S.T/S.dt);      
+S.start = int16(S.start/S.dt);
+S.jumpT = int16(S.jumpT/S.dt);
 
 %% Model parameters
 S.alpha = 3;     %  
@@ -37,16 +51,33 @@ sig = 0.1;
 [S.KE, S.KI] = ConMatrix(kau,rho,sig,S.N);
 
 %Weight matrix
-
 [S.w1,S.w2] = WeightMatrix(S.N);
 
 
 %% Stimuli and Bias
+
+%Creating and saving or loading raw stimuli
+if ~exist('Stim','var')
+    if exist('StimRaw.mat','file') == 2
+        
+        load('StimRaw')
+    
+    elseif ~exist('StimRaw.mat','file')
+    
+        fprintf('\nCreating and saving stimuli in cd ...\n\n')
+        Stim = stimCreation();            % Creating raw stim
+        save([pwd '/StimRaw.mat'],'Stim') % Saving variables
+
+    end
+end
+
 PD = 270;
 OD = 90;
 sd = 30;
 
-S.V = ExtInputs(PD,OD,sd,S.hnorm,S.T,S.N);
+%Creating inputs
+fprintf('\nExternal input creation ... \n');
+S.V = ExtInputs(S,Stim);
 
 
 %% SIMULATION
@@ -57,7 +88,7 @@ pref = find(S.V(:,end)>0.5);
 npref = setdiff(1:S.N,pref);
 
 %% Figures
-FigureCTC 
+% FigureCTC 
 
 return;
 
