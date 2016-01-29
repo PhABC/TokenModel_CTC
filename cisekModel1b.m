@@ -5,26 +5,34 @@ close all;
 warning off all;
 
 %% Simulation parameters
-S.N     = 50;    % Nb of neurons
-S.T     = 1000;  % Simulation time in ms
-S.start = 100;   % Start of trial in ms
-S.dt    = 1;     % Time step in ms
-S.tau   = 0.005; % Time constant
+S.N      = 50;    % Nb of neurons
+S.T      = 1000;  % Simulation time in ms
+S.onset  = 100;   % onset of trial in ms
+S.dt     = 1;     % Time step in ms
+S.tau    = 0.005; % Time constant
+
+%% Input parameters
 
 % Stimuli parameters
-S.c     = 1;     % type : 1 = easy ~ 2 = misleading ~ 3 = ambiguous
-S.nbEx  = 1000;  % Number of stimuli examples to present
-S.jumpT = 50;    % interval between each jumps in ms (verify if work with T)
-S.stimW = 0.05;  % Amplitude of stimuli
+S.c      = 1;     % type : 1 = easy ~ 2 = misleading ~ 3 = ambiguous
+S.nbEx   = 1000;  % Number of stimuli examples to present
+S.jumpT  = 50;    % interval between each jumps in ms (verify if work with T)
+S.stimW  = 0.05;  % Amplitude of stimuli
 
-% Input parameters
-S.bias = 0.5;   % Additive bias
-S.G    = 0.2;   % Noise amplitude
+% Bias parameters
+S.bias   = 0.5;   % Additive bias strength
 
-%Expanding time with dt
-S.T     = int16(S.T/S.dt);      
-S.start = int16(S.start/S.dt);
-S.jumpT = int16(S.jumpT/S.dt);
+% Noise parameters
+S.fG     = 0.01;  % Fast gaussian noise strength (iid)
+S.sG     = 0.1 ;  % Slow gaussian noise strength (shared noise)
+
+% Linear urgency parameters
+	%To note, origin and slope will be gaussian distributed for different trials
+S.Utype = 1;	% 1 = additive urgency signal ~ 2 = multiplicative urgency signal
+S.Uori  = 1;    % origin point for the linear function ~ put 
+S.Uslop = 1;    % Slope of the linear urgency function 
+S.Uw    = 1;	% Amplitude of urgency signal [ consider Utype for this value ] 
+
 
 %% Model parameters
 S.alpha = 3;     %  
@@ -33,6 +41,10 @@ S.gamma = 6;     %
 S.eta   = 0.1;   %
 S.Tau   = 0.1;   %
 
+%Expanding time with dt
+S.T     = floor(S.T/S.dt);      
+S.onset = floor(S.onset/S.dt);
+S.jumpT = floor(S.jumpT/S.dt);
 
 %% Tuning curves (homogeneous)
 r0   = 0;       %       
