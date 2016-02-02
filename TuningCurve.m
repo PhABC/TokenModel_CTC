@@ -13,6 +13,6 @@ function tuningMat = TuningCurve(r0,rmax,sd,N)
         k = k+1;
     end
     
-    tuningMat = all_g(1:360,:)+all_g(361:end,:);
+    tuningMat = all_g(1:360,:)+all_g(361:end,:)+flip(flip(all_g(361:end,:),2));
     
 end
