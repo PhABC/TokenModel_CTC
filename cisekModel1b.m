@@ -15,7 +15,7 @@ S.tau    = 0.005; % Time constant
 
 % Stimuli parameters
 S.c      = 1;     % type : 1 = easy ~ 2 = misleading ~ 3 = ambiguous
-S.nbEx   = 1000;  % Number of stimuli examples to present
+S.nbEx   = 1;  % Number of stimuli examples to present
 S.jumpT  = 50;    % interval between each jumps in ms (verify if work with T)
 S.stimW  = 0.05;  % Amplitude of stimuli
 
@@ -47,11 +47,13 @@ S.onset = floor(S.onset/S.dt);
 S.jumpT = floor(S.jumpT/S.dt);
 
 %% Tuning curves (homogeneous)
-r0   = 0;       %       
-rmax = 0.01;    %
-sd   = 30;      %                      
+r0   = 0;       % Baseline      
+rmax = 0.01;    % Peak max
+sd   = 30;      % Standart deviation of tuning curve             
 
 S.hnorm = TuningCurve(r0,rmax,sd,S.N);
+
+
 
 %% Connections
 
@@ -63,7 +65,7 @@ sig = 0.1;
 [S.KE, S.KI] = ConMatrix(kau,rho,sig,S.N);
 
 %Weight matrix
-[S.w1,S.w2] = WeightMatrix(S.N);
+[S.w1,S.w2]  = WeightMatrix(S.N);
 
 
 %% Stimuli and Bias
@@ -89,18 +91,27 @@ sd = 30;
 
 %Creating inputs
 fprintf('\nExternal input creation ... \n');
-S.V = ExtInputs(S,Stim);
-
+[ S.urg,S.stim,S.SG ] = ExtInputs(S,Stim);
 
 %% SIMULATION
-[M1,M2] = CTCsim(S);
+
+fprintf('Simulation ...\n\n')
+
+for trial = 1:S.nbEx
+    
+    fprintf('Trial %d of %d \n',trial,S.nbEx) 
+    
+    [ S.V,S.U ] = TrialInput(S,trial);
+    [ M1,M2 ] = CTCsim(S);
+    
+end
 
 %find pref units
 pref = find(S.V(:,end)>0.5);
 npref = setdiff(1:S.N,pref);
 
 %% Figures
-% FigureCTC 
+FigureCTC 
 
 return;
 
