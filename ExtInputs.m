@@ -1,12 +1,12 @@
-function V = ExtInputs(S,Stim)
+function [ urg,stim,SG ] = ExtInputs(S,Stim)
 %% External inputs
     %All the inputs not coming from the neural activity
 
 %% Stimuli
-
 %Unpacking fields
-   T=S.T;  nbEx=S.nbEx; c=S.c;jumpT=S.jumpT; bias=S.bias; Uslop=S.Uslop;
-   onset=S.onset; stimW=S.stimW; Utype=S.Utype; Uw=S.Uw;  Uori = S.Uori;
+   T=S.T; dt=S.dt; nbEx=S.nbEx; c=S.c;jumpT=S.jumpT; 
+   Uslop=S.Uslop; onset=S.onset; Uw=S.Uw; Uori=S.Uori;
+
      
 %Initializing
    nstim   = Stim.nbStim{c};               %Number of stim of chosen c
@@ -32,14 +32,12 @@ function V = ExtInputs(S,Stim)
    idx     = randi(nstim,[nbEx,1]); %Select nbEx random integer within nstim
    stim    = stimAll(idx,:);
    
-  
 %% Urgency   
-
 %Baseline urgency signal
    Uend = (T-onset)*Uslop;       %Last point of linear function wrt T
    urg  = zeros(nbEx,T);  
    urg(:,onset:end) = repmat(linspace(0,Uend,T-onset+1),... 
-                             [nbEx,1]); %Urgency starts at stim onset
+                             [nbEx,1]);      % Urgency starts at stim onset
    urg  = urg/max(urg(:,end));                             % Normalized
    
 %Creating gauss distribution   
@@ -48,17 +46,28 @@ function V = ExtInputs(S,Stim)
    urg  = urg/max(urg(:,end));                            % Normalized
    urg(urg<0) = 0;                                        % Del values < 0
 
-   
-   if Utype == 1
-       %Additive urgency
-        V = stim*stimW  + urg*Uw + bias;
+   urg = urg*Uw;
 
-   elseif Utype ==2
-       %Multiplicative urgency ~~~ NOT MULTIPLIYING ALL INPUTS CURRENTLY
-        V = stim*stimW .* urg*Uw + bias;
-       
-   end
- 
+%% Slow noise
+    tauSG = 500;                          % time constant of slow noise in ms
+    noise = randn(nbEx,T/(tauSG/dt)+1);
+    
+    step = tauSG/dt; 
+    
+    SG = zeros(nbEx,T);
+    i = 1; 
+    
+    %Expanding slow noise
+    for t = 1:step:T
+        SG(:,t:t+step-1) = linspaceMat(noise(:,i),noise(:,i+1),step);
+        i=i+1;
+    end
+    
+    %Smoothing out noise
+    for ex = 1:nbEx
+        SG(ex,:) = smooth(SG(ex,:),100/dt);
+    end
+    
     
 %% Simple stimuli JPT    
 % %easy, non-misleading stimulus
