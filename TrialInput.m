@@ -1,4 +1,4 @@
-function [ V,U ] = TrialInput(S,trial)
+function [ stim,V,U,pref,npref ] = TrialInput(S,trial)
 %% TrialInput
 % Will put all inputs in right format for each trial in the simulation   
 
@@ -19,23 +19,24 @@ function [ V,U ] = TrialInput(S,trial)
   gaussR = -circshift(gaussL,-m);         % Translation for right angle
     
   tokG   = gaussL + gaussR;               % Combining left & right  
-
+  
 %Neurons preference with token orientation
   hstim  = S.hnorm .* repmat(tokG,1,N);             
+  pref   = sum(hstim)>0;
+  npref  = sum(hstim)<0;
   
 %Cummulative input for each neurons based on stim and pref 
   stim   = hstim'   * repmat(S.stim(trial,:),360,1);
 
 %Negative values indicate their non prefered direction
   stim(stim<0) = 0;
-  
-  asfasf
+
   
 %% Fast noise
   FG = randn(N,T);
 
 %% Bias, fast noise and slow noise
-  V  = stim + S.bias + repmat(S.SG(trial,:),N,1)*S.sG + FG*S.fG;
+  V  = S.bias + repmat(S.SG(trial,:),N,1)*S.sG + FG*S.fG;
   U  = repmat(S.urg(trial,:),N,1);
   
   

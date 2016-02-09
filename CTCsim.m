@@ -42,8 +42,8 @@ gamma = S.gamma; eta = S.eta; Tau = S.Tau; Utype = S.Utype;
         Y1 = repmat(max(X1-Tau,0),1,N); %% ???
         Y2 = repmat(max(X2-Tau,0),1,N); %% ???
 
-        E1 = s_wY2 + s_KE1 + S.V(:,s);   
-        E2 = s_wY1 + s_KE2;
+        E1 = s_wY2 + s_KE1 + S.V(:,s)+S.S(:,s);   
+        E2 = s_wY1 + s_KE2 + S.V(:,s);
 
         dX1 = -(alpha.*X1) + (beta - X1).*gamma.*E1 - X1.*s_I1;
         dX2 = -(alpha.*X2) + (beta - X2).*gamma.*E2 - X2.*s_I2;

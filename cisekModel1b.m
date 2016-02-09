@@ -1,8 +1,11 @@
 %% SIMPLIFIED VERSION WITH ONLY a 2-layer PMD
 
-clear all;
+% clear all;
 close all;
 warning off all;
+
+ seed = rng;       %Saving seed
+%rng(seed)           %Loading seed
 
 %% Simulation parameters
 S.N      = 50;    % Nb of neurons
@@ -17,14 +20,14 @@ S.tau    = 0.005; % Time constant
 S.c      = 1;     % type : 1 = easy ~ 2 = misleading ~ 3 = ambiguous
 S.nbEx   = 1;  % Number of stimuli examples to present
 S.jumpT  = 50;    % interval between each jumps in ms (verify if work with T)
-S.stimW  = 0.05;  % Amplitude of stimuli
+S.stimW  = 0.01;  % Amplitude of stimuli
 
 % Bias parameters
-S.bias   = 0.5;   % Additive bias strength
+S.bias   = 1;   % Additive bias strength
 
 % Noise parameters
 S.fG     = 0.01;  % Fast gaussian noise strength (iid)
-S.sG     = 0.1 ;  % Slow gaussian noise strength (shared noise)
+S.sG     = 0.2 ;  % Slow gaussian noise strength (shared noise)
 
 % Linear urgency parameters
 	%To note, origin and slope will be gaussian distributed for different trials
@@ -100,15 +103,11 @@ fprintf('Simulation ...\n\n')
 for trial = 1:S.nbEx
     
     fprintf('Trial %d of %d \n',trial,S.nbEx) 
-    
-    [ S.V,S.U ] = TrialInput(S,trial);
+    % stimuli preferences are also assigned in the following fct
+    [ S.S, S.V, S.U, S.pref, S.npref ] = TrialInput(S,trial);
     [ M1,M2 ] = CTCsim(S);
     
 end
-
-%find pref units
-pref = find(S.V(:,end)>0.5);
-npref = setdiff(1:S.N,pref);
 
 %% Figures
 FigureCTC 
