@@ -20,8 +20,7 @@ function W = wMat(r0,rmax,sd,WEw,WIw,N)
     
     % Cummulative weight matrix
     W = E*WEw - I*WIw;
-   
-    
+       
     W = W + randn(size(W))*WEw*.05;    
 
 end
