@@ -1,5 +1,13 @@
 %% SIMPLIFIED VERSION WITH ONLY a 2-layer PMD
+    %Each region is refered as R1 and R2.
 
+% ++++ SD for inhibition not implemented yet. 
+% ++++ Weights dont wrap properly 
+% ++++ Internal connecitons not implemented with wMat
+% ++++ Fusing E and I matrix in CTCsim
+
+    
+    
 % clear all;
 close all;
 warning off all;
@@ -14,27 +22,67 @@ S.onset  = 100;   % onset of trial in ms
 S.dt     = 1;     % Time step in ms
 S.tau    = 0.005; % Time constant
 
+%% Connections parameters
+%   To have a ff network, make weight from R2 to R1 to 0. Can adjust the
+%   strength of excitation and inhibition with WEw and WIw respectively.
+%
+%   The standar devations (SD) have to be between 0 and 1 as they are
+%   proportional to the number of neurons. More specifically, this sd value
+%   is multiplied by the number of neurons. Hence 1 would mean 
+
+% Weight between regions
+
+    %Connections R1 to R2 
+    S.WEw_12  = .1;   % Amplitude of excitory   weight R1 -> R2
+    S.WEsd_12 = .1;   % 0 < sd < 1 ~ Standart deviation of E
+
+    S.WIw_12  = .05;   % Amplitude of inhibitory weight R1 -> R2
+%    S.WIsd_12 = .1;   % 0 < sd < 1 ~ Standart deviation of I
+
+    %Connections R2 to R1
+    S.WEw_21  = .1;   % Amplitude of excitory   weight R2 -> R1
+    S.WEsd_21 = .1;   % 0 < sd < 1 ~ Standart deviation of E
+
+    S.WIw_21  =.05;   % Amplitude of inhibitory weight R2 -> R1
+%     S.WIsd_21 = .1;   % 0 < sd < 1 ~ Standart deviation of I
+
+% Weight within regions
+
+    %R1 kernel
+    S.WEw_1   =  1;   % Amplitude of excitory   weight R1 -> R1
+    S.WEsd_1  = .1;   % 0 < sd < 1 ~ Standart deviation of E
+
+    S.WIw_1   = .5;   % Amplitude of inhibitory weight R1 -> R1
+%     S.WIsd_1  = .1;   % 0 < sd < 1 ~ Standart deviation of I
+
+    %R2 kernel
+    S.WEw_2   =  1;   % Amplitude of excitory   weight R2 -> R2
+    S.WEsd_2  = .1;   % 0 < sd < 1 ~ Standart deviation of E
+
+    S.WIw_2   = .5;   % Amplitude of inhibitory weight R2 -> R2
+%     S.WIsd_2  = .1;   % 0 < sd < 1 ~ Standart deviation of I
+
 %% Input parameters
 
 % Stimuli parameters
-S.c      = 1;     % type : 1 = easy ~ 2 = misleading ~ 3 = ambiguous
-S.nbEx   = 1;  % Number of stimuli examples to present
-S.jumpT  = 50;    % interval between each jumps in ms (verify if work with T)
-S.stimW  = 0.01;  % Amplitude of stimuli
+S.c      = 1;    % type : 1 = easy ~ 2 = misleading ~ 3 = ambiguous
+S.nbEx   = 1;    % Number of stimuli examples to present
+S.jumpT  = 50;   % interval between each jumps in ms (verify if work with T)
+S.stimW  = 1;    % Amplitude of stimuli
 
 % Bias parameters
-S.bias   = 1;   % Additive bias strength
+S.bias   = 0.2;  % Additive bias strength
 
 % Noise parameters
-S.fG     = 0.01;  % Fast gaussian noise strength (iid)
-S.sG     = 0.2 ;  % Slow gaussian noise strength (shared noise)
+S.fG     = 0.05; % Fast gaussian noise strength (iid)
+S.sG     = 0.0 ; % Slow gaussian noise strength (shared noise)
 
 % Linear urgency parameters
 	%To note, origin and slope will be gaussian distributed for different trials
-S.Utype = 1;	% 1 = additive urgency signal ~ 2 = multiplicative urgency signal
-S.Uori  = 1;    % origin point for the linear function ~ put 
-S.Uslop = 1;    % Slope of the linear urgency function 
-S.Uw    = 1;	% Amplitude of urgency signal [ consider Utype for this value ] 
+S.Utype  = 1;	 % 1 = additive urgency signal ~ 2 = multiplicative urgency signal
+S.Uori   = 1;    % origin point for the linear function ~ put 
+S.Uslop  = 1;    % Slope of the linear urgency function 
+S.Uw     = 0;    % Amplitude of urgency signal [ consider Utype for this value ] 
 
 
 %% Model parameters
@@ -44,34 +92,42 @@ S.gamma = 6;     %
 S.eta   = 0.1;   %
 S.Tau   = 0.1;   %
 
-%Expanding time with dt
-S.T     = floor(S.T/S.dt);      
-S.onset = floor(S.onset/S.dt);
-S.jumpT = floor(S.jumpT/S.dt);
+% Unwrapping certain parameters
+N = S.N;
+
 
 %% Tuning curves (homogeneous)
 r0   = 0;       % Baseline      
 rmax = 0.01;    % Peak max
 sd   = 30;      % Standart deviation of tuning curve             
 
-S.hnorm = TuningCurve(r0,rmax,sd,S.N);
-
+S.hnorm = TuningCurve(r0,rmax,sd,N);
 
 
 %% Connections
-
 %Connections matrix
 kau = 1.75;
 rho = 0.25;
 sig = 0.1;
+%KE and KI and internal excitory and inhibitory activity kernel of each
+%region. It is the equivalent of lateral connections for each region. 
+[S.KE, S.KI]    = ConMatrix(kau,rho,sig,N);
 
-[S.KE, S.KI] = ConMatrix(kau,rho,sig,S.N);
+% S.KE_1 = 
+% S.KE_2 =
 
-%Weight matrix
-[S.w1,S.w2]  = WeightMatrix(S.N);
+%Weight matrix between regions
+S.W12 = wMat(0,1, S.WEsd_12*N, S.WEw_12, S.WIw_12, N);
+S.W21 = wMat(0,1, S.WEsd_21*N, S.WEw_21, S.WIw_12, N);
+
 
 
 %% Stimuli and Bias
+
+%Expanding time with dt
+S.T     = floor(S.T/S.dt);      
+S.onset = floor(S.onset/S.dt);
+S.jumpT = floor(S.jumpT/S.dt);
 
 %Creating and saving or loading raw stimuli
 if ~exist('Stim','var')

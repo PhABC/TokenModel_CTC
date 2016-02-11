@@ -12,5 +12,7 @@ w1 = w+randn(N).*max(max(w)).*0.01;
 % w2 = w+randn(N).*max(max(w)).*0.01; %recurrent connections
 w2 = zeros(N); %FF connections
  
+
+asdffd 
 end
 

@@ -20,10 +20,10 @@ gamma = S.gamma; eta = S.eta; Tau = S.Tau; Utype = S.Utype;
         t = (s-1)*dt;        % Current time in ms
 
         %activation from PMd1
-        s_wY1 = sum(S.w1.*Y1,2);
+        s_wY1 = sum(S.W12.*Y1,2);
 
         %activation from PMd2
-        s_wY2 = sum(S.w2.*Y2,2);
+        s_wY2 = sum(S.W21.*Y2,2);
 
         %within-layer activation 1    
         s_KE1 = sum(S.KE.*fct(Y1),2); % Nonlinear fct
@@ -32,7 +32,6 @@ gamma = S.gamma; eta = S.eta; Tau = S.Tau; Utype = S.Utype;
         %within-layer activation 2
         s_KE2 = sum(S.KE.*fct(Y2),2); % Nonlinear fct
 %       s_KE2 = sum(S.KE.*Y2,2);      % Linear
-        
         
         s_I1 = sum(S.KI .* fct(Y1),2);
         s_I2 = sum(S.KI .* fct(Y2),2);
