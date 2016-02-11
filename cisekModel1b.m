@@ -28,7 +28,8 @@ S.tau    = 0.005; % Time constant
 %
 %   The standar devations (SD) have to be between 0 and 1 as they are
 %   proportional to the number of neurons. More specifically, this sd value
-%   is multiplied by the number of neurons. Hence 1 would mean 
+%   is multiplied by the number of neurons. **NOT IMPLEMENTED FOR
+%   INHIBITION**
 
 % Weight between regions
 
@@ -36,31 +37,31 @@ S.tau    = 0.005; % Time constant
     S.WEw_12  = .1;   % Amplitude of excitory   weight R1 -> R2
     S.WEsd_12 = .1;   % 0 < sd < 1 ~ Standart deviation of E
 
-    S.WIw_12  = .05;   % Amplitude of inhibitory weight R1 -> R2
-%    S.WIsd_12 = .1;   % 0 < sd < 1 ~ Standart deviation of I
+    S.WIw_12  = .5;  % Amplitude of inhibitory weight R1 -> R2
+%   S.WIsd_12 = .1;   % 0 < sd < 1 ~ Standart deviation of I
 
     %Connections R2 to R1
     S.WEw_21  = .1;   % Amplitude of excitory   weight R2 -> R1
     S.WEsd_21 = .1;   % 0 < sd < 1 ~ Standart deviation of E
 
     S.WIw_21  =.05;   % Amplitude of inhibitory weight R2 -> R1
-%     S.WIsd_21 = .1;   % 0 < sd < 1 ~ Standart deviation of I
+%   S.WIsd_21 = .1;   % 0 < sd < 1 ~ Standart deviation of I
 
 % Weight within regions
 
     %R1 kernel
-    S.WEw_1   =  1;   % Amplitude of excitory   weight R1 -> R1
+    S.WEw_1   = .01;   % Amplitude of excitory   weight R1 -> R1
     S.WEsd_1  = .1;   % 0 < sd < 1 ~ Standart deviation of E
 
-    S.WIw_1   = .5;   % Amplitude of inhibitory weight R1 -> R1
-%     S.WIsd_1  = .1;   % 0 < sd < 1 ~ Standart deviation of I
+    S.WIw_1   = .1;   % Amplitude of inhibitory weight R1 -> R1
+%   S.WIsd_1  = .1;   % 0 < sd < 1 ~ Standart deviation of I
 
     %R2 kernel
-    S.WEw_2   =  1;   % Amplitude of excitory   weight R2 -> R2
+    S.WEw_2   = .01;   % Amplitude of excitory   weight R2 -> R2
     S.WEsd_2  = .1;   % 0 < sd < 1 ~ Standart deviation of E
 
-    S.WIw_2   = .5;   % Amplitude of inhibitory weight R2 -> R2
-%     S.WIsd_2  = .1;   % 0 < sd < 1 ~ Standart deviation of I
+    S.WIw_2   = .1;   % Amplitude of inhibitory weight R2 -> R2
+%   S.WIsd_2  = .1;   % 0 < sd < 1 ~ Standart deviation of I
 
 %% Input parameters
 
@@ -112,6 +113,9 @@ sig = 0.1;
 %KE and KI and internal excitory and inhibitory activity kernel of each
 %region. It is the equivalent of lateral connections for each region. 
 [S.KE, S.KI]    = ConMatrix(kau,rho,sig,N);
+
+S.K1  = wMat(0,1, S.WEsd_1*N, S.WEw_1, S.WIw_1, N);
+S.K2  = wMat(0,1, S.WEsd_2*N, S.WEw_2, S.WIw_2, N);
 
 % S.KE_1 = 
 % S.KE_2 =
