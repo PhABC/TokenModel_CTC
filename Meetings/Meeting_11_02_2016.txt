@@ -1,0 +1,6 @@
++ Trying where to add the urgency and if we can recreate
+	the change in slope urgency from Standach
++ Preparing data from PCA
++ Trying to see if the commitment is done in PMD or M1
+	and this causes PCA to curve.
++ Nice behaviors for meeting with JP.
