@@ -1,5 +1,0 @@
-QUESTIONS:
-	+ Should we respect Dales law? (some N are inhibitory some are excitory) or mean population
-	+ Internal kernel linear?
-	+ Wrapping weights
-	+ 
