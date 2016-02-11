@@ -10,11 +10,11 @@
 warning off all;
 clearvars -except seed
  
-  seed = rng;       %Saving seed
+%  seed = rng;       %Saving seed
  rng(seed)           %Loading seed
 
 %% Simulation parameters
-S.N      = 100;    % Nb of neurons
+S.N      = 50;    % Nb of neurons
 S.T      = 1000;  % Simulation time in ms
 S.onset  = 120;   % onset of trial in ms
 S.dt     = 1;     % Time step in ms
@@ -48,15 +48,15 @@ S.tau    = 0.005; % Time constant
 % Weight within regions
 
     %R1 kernel
-    S.WEw_1   = .01;   % Amplitude of excitory   weight R1 -> R1
-    S.WIw_1   = .1;   % Amplitude of inhibitory weight R1 -> R1
+    S.WEw_1   =  .1;   % Amplitude of excitory   weight R1 -> R1
+    S.WIw_1   = 0.1;   % Amplitude of inhibitory weight R1 -> R1
     
     S.WEsd_1  = .1;   % 0 < sd < 1 ~ Standart deviation of E
 %   S.WIsd_1  = .1;   % 0 < sd < 1 ~ Standart deviation of I
 
     %R2 kernel
     S.WEw_2   = .001;   % Amplitude of excitory   weight R2 -> R2
-    S.WIw_2   = .04;   % Amplitude of inhibitory weight R2 -> R2
+    S.WIw_2   = .001;   % Amplitude of inhibitory weight R2 -> R2
     
     S.WEsd_2  = .1;   % 0 < sd < 1 ~ Standart deviation of E
 %   S.WIsd_2  = .1;   % 0 < sd < 1 ~ Standart deviation of I
@@ -78,10 +78,10 @@ S.sG     = 0.1;  % Slow gaussian noise strength (shared noise)
 
 % Linear urgency parameters
 	%To note, origin and slope will be gaussian distributed for different trials
-S.Utype  = 1;	 % 1 = additive urgency signal ~ 2 = multiplicative urgency signal
+S.Utype  = 2;	 % 1 = additive urgency signal ~ 2 = multiplicative urgency signal
 S.Uori   = 1;    % origin point for the linear function ~ put 
-S.Uslop  = 1;    % Slope of the linear urgency function 
-S.Uw     = 20;  % Amplitude of urgency signal [ consider Utype for this value ] 
+S.Uslop  = 8;   % Slope of the linear urgency function 
+S.Uw     = 1;    % Amplitude of urgency signal [ consider Utype for this value ] 
 
 
 %% Model parameters
