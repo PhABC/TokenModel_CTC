@@ -26,7 +26,7 @@ function [ stim,V,U,pref,npref ] = TrialInput(S,trial)
   npref  = sum(hstim)<0;
   
 %Cummulative input for each neurons based on stim and pref 
-  stim   = hstim'   * repmat(S.stim(trial,:),360,1);
+  stim   = hstim'   * repmat(S.stim(trial,:),360,1) * stimW;
 
 %Negative values indicate their non prefered direction
   stim(stim<0) = 0;
