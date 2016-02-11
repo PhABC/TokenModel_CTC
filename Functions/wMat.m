@@ -15,12 +15,11 @@ function W = wMat(r0,rmax,sd,WEw,WIw,N)
     E = all_g(1:N,:)+all_g(N+1:end,:)+... 
            flip(flip(all_g(N+1:end,:),2));
     
-    % Inhibition connections
-    I = circshift(E,N/2,2);
-    
     % Cummulative weight matrix
-    W = E*WEw - I*WIw;
+    W = E*WEw;
+    
+    sunk = max(max(W))/2;
        
-    W = W + randn(size(W))*WEw*.05;    
+    W = W-sunk + randn(size(W))*WEw*.05;    
 
 end
