@@ -2,7 +2,7 @@
     %Each region is refered as R1 and R2.
 
 % ++++ SD for inhibition not implemented yet. 
-% ++++ Weights dont wrap properly 
+% ++++ change transpose operation in CTCsim (slow down simulation) 
 
     
 % clear all;
