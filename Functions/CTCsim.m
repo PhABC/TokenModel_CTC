@@ -45,6 +45,18 @@ for s=1:T/dt
     Y1 = repmat(max(X1-Tau,0),1,N); 
     Y2 = repmat(max(X2-Tau,0),1,N); 
 
+    if Utype == 1 %additive urgency 
+        
+        E1 = s_wY2 + s_KE1 + S.V(:,s) + S.S(:,s) + S.U(:,s);   
+        E2 = s_wY1 + s_KE2 + S.V(:,s);
+
+    elseif Utype == 2 %Multiplicative urgency
+
+        E1 = s_wY2 + s_KE1 + S.V(:,s) + S.S(:,s) .* S.U(:,s);   
+        E2 = s_wY1 + s_KE2 + S.V(:,s); 
+
+    end
+    
     E1 = s_wY2 + s_KE1 + S.V(:,s)+S.S(:,s);   
     E2 = s_wY1 + s_KE2 + S.V(:,s);
 
@@ -56,18 +68,8 @@ if s == 300
     s;
 end
     
-
-    if Utype == 1 %additive urgency 
-
-        dX1 = ( dX1 + S.U(:,s) ) .* tau;
-        dX2 = ( dX2 + S.U(:,s) ) .* tau;
-
-    elseif Utype == 2 %Multiplicative urgency
-
-        dX1 = ( dX1 .* S.U(:,s) ) .* tau;
-        dX2 = ( dX2 .* S.U(:,s) ) .* tau;  
-
-    end
+        dX1 = dX1 .* tau;
+        dX2 = dX2 .* tau;
 
     X1 = X1 + dX1.*dt;
     X2 = X2 + dX2.*dt;
