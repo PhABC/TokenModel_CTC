@@ -38,12 +38,12 @@ function [ urg,stim,SG ] = ExtInputs(S,Stim)
    urg  = zeros(nbEx,T);  
    urg(:,onset:end) = repmat(linspace(0,Uend,T-onset+1),... 
                              [nbEx,1]);      % Urgency starts at stim onset
-   urg  = urg/max(urg(:,end));                             % Normalized
+%    urg  = urg/max(urg(:,end));                             % Normalized
    
 %Creating gauss distribution   
    urg  = urg .* abs(repmat(randn(nbEx,1)+Uslop,1,T))...  % Random slopes
                + repmat(0.1*randn(nbEx,1)+Uori,1,T);      % Random origins
-   urg  = urg/max(urg(:,end));                            % Normalized
+%    urg  = urg/max(urg(:,end));                            % Normalized
    urg(urg<0) = 0;                                        % Del values < 0
 
    urg = urg*Uw;
