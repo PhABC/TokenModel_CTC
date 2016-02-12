@@ -14,6 +14,10 @@ In order to play with the different architecture, there are some parameters more
 than others. Here, it will be describe which parameters are the most relevant and
 what they mean.
 
+# Seed
+Seed allows you to replay a simulation, which can be useful if testing parameters.
+	+ seed  = Saving the current seed. Comment out if you want to use the previous seed
+
 # Stimulation parameters
 In this section, you can choose general parameters for simulation:
 
