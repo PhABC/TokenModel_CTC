@@ -1,6 +1,7 @@
 %% SIMPLIFIED VERSION WITH ONLY a 2-layer PMD
     %Each region is refered as R1 and R2.
 
+% ++++ Urgency slope that can go above 1
 % ++++ SD for inhibition not implemented yet ?
 % ++++ proper output format for PCA decision manifold 
     
