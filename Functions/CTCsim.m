@@ -3,7 +3,7 @@ function [M1,M2] = CTCsim(S)
 
 %Unpacking fields
 N = S.N; T = S.T; dt = S.dt; tau = S.tau; alpha = S.alpha; beta = S.beta;
-gamma = S.gamma; eta = S.eta; Tau = S.Tau; Utype = S.Utype;
+gamma = S.gamma; Tau = S.Tau; Utype = S.Utype;
 
 
 % Initialization
@@ -52,7 +52,7 @@ for s=1:T/dt
 
     elseif Utype == 2 %Multiplicative urgency
 
-        E1 = s_wY2 + s_KE1 + S.V(:,s) + S.S(:,s) .* S.U(:,s);   
+        E1 = (s_wY2 + s_KE1 + S.V(:,s) + S.S(:,s)).* S.U(:,s);   
         E2 = s_wY1 + s_KE2 + S.V(:,s); 
 
     end
@@ -77,7 +77,7 @@ end
     M1(:,s) = X1;
     M2(:,s) = X2;
 
-    end
+end
 
 
 

@@ -2,7 +2,6 @@
     %Each region is refered as R1 and R2.
 
 % ++++ SD for inhibition not implemented yet. 
-% ++++ change transpose operation in CTCsim (slow down simulation) 
 
     
 % clear all;
@@ -11,7 +10,7 @@ warning off all;
 clearvars -except seed
  
 %  seed = rng;       %Saving seed
- rng(seed)           %Loading seed
+%  rng(seed)           %Loading seed
 
 %% Simulation parameters
 S.N      = 50;    % Nb of neurons
@@ -32,34 +31,28 @@ S.tau    = 0.005; % Time constant
 % Weight between regions
 
     %Connections R1 to R2 
-    S.WEw_12  = .02;   % Amplitude of excitory   weight R1 -> R2
-    S.WIw_12  = .000;  % Amplitude of inhibitory weight R1 -> R2
+    S.Ww_12   = .05;   % Amplitude of weight R1 -> R2
+    S.Sunk_12 =  0.2;   % Proportion of sunking gaussian. 1 = all inhibitory.   
+    S.Wsd_12  = .1;    % 0 < sd < 1 ~ Standart deviation
     
-    S.WEsd_12 = .1;   % 0 < sd < 1 ~ Standart deviation of E
-%   S.WIsd_12 = .1;   % 0 < sd < 1 ~ Standart deviation of I
-
     %Connections R2 to R1
-    S.WEw_21  = 0.0;   % Amplitude of excitory   weight R2 -> R1
-    S.WIw_21  = 0.0;   % Amplitude of inhibitory weight R2 -> R1
+    S.Ww_21   =  .0;   
+    S.Sunk_21 =  .5;   
+    S.Wsd_21  =  .1;   
     
-    S.WEsd_21 = .1;   % 0 < sd < 1 ~ Standart deviation of E
-%   S.WIsd_21 = .1;   % 0 < sd < 1 ~ Standart deviation of I
-
 % Weight within regions
 
     %R1 kernel
-    S.WEw_1   =  .1;   % Amplitude of excitory   weight R1 -> R1
-    S.WIw_1   = 0.1;   % Amplitude of inhibitory weight R1 -> R1
-    
-    S.WEsd_1  = .1;   % 0 < sd < 1 ~ Standart deviation of E
-%   S.WIsd_1  = .1;   % 0 < sd < 1 ~ Standart deviation of I
+    S.Ww_11   =  .15;    % Amplitude of weight R1 -> R1 
+    S.Sunk_11 =  .5;    % Proportion of sunking gaussian. 1 = all inhibitory.
+    S.Wsd_11  =  .1;     % 0 < sd < 1 ~ Standart deviation
 
     %R2 kernel
-    S.WEw_2   = .001;   % Amplitude of excitory   weight R2 -> R2
-    S.WIw_2   = .001;   % Amplitude of inhibitory weight R2 -> R2
+    S.Ww_22   = .001;   
+    S.Sunk_22 = .5; 
+    S.Wsd_22  = .1;   
     
-    S.WEsd_2  = .1;   % 0 < sd < 1 ~ Standart deviation of E
-%   S.WIsd_2  = .1;   % 0 < sd < 1 ~ Standart deviation of I
+
 
 %% Input parameters
 
@@ -73,7 +66,7 @@ S.stimW  = 5;  % Amplitude of stimuli ( 0< flip stimuli )
 S.bias   = 10;    % Additive bias strength
 
 % Noise parameters
-S.fG     = 20;   % Fast gaussian noise strength (iid)
+S.fG     = 10;   % Fast gaussian noise strength (iid)
 S.sG     = 0.1;  % Slow gaussian noise strength (shared noise)
 
 % Linear urgency parameters
@@ -85,11 +78,10 @@ S.Uw     = 1;    % Amplitude of urgency signal [ consider Utype for this value ]
 
 
 %% Model parameters
-S.alpha = 5;     %  
-S.beta  = 100;     %  %Maximum activity value
-S.gamma = 1;     %
-S.eta   = 0;   %
-S.Tau   = 0;   %
+S.alpha = 5;     %  Decay factor 
+S.beta  = 100;   %  Maximum activity value
+S.gamma = 1;     %  Excitation ratio
+S.Tau   = 0;     %  
 
 % Unwrapping certain parameters
 N = S.N;
@@ -112,12 +104,12 @@ S.hnorm = TuningCurve(r0,rmax,sd,N);
 
 % K1 and K2 are internal activity kernel of each region. It is the 
 % equivalent of lateral connections within each region. 
-S.K1  = wMat(0,1, S.WEsd_1*N, S.WEw_1, S.WIw_1, N);
-S.K2  = wMat(0,1, S.WEsd_2*N, S.WEw_2, S.WIw_2, N);
+S.K1  = wMat(S.Wsd_11*N, S.Ww_11,S.Sunk_11, N);
+S.K2  = wMat(S.Wsd_22*N, S.Ww_22,S.Sunk_22, N);
 
 %Weight matrix between regions
-S.W12 = wMat(0,1, S.WEsd_12*N, S.WEw_12, S.WIw_12, N);
-S.W21 = wMat(0,1, S.WEsd_21*N, S.WEw_21, S.WIw_21, N);
+S.W12 = wMat(S.Wsd_12*N, S.Ww_12, S.Sunk_12, N);
+S.W21 = wMat(S.Wsd_21*N, S.Ww_21, S.Sunk_21, N);
 
 
 

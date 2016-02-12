@@ -1,4 +1,4 @@
-function W = wMat(r0,rmax,sd,WEw,WIw,N)
+function W = wMat(sd,Ww,sunkR,N)
     
     x = 1:N*2;
     all_shifts = linspace(1,N*2,N*2);    
@@ -6,8 +6,8 @@ function W = wMat(r0,rmax,sd,WEw,WIw,N)
     k = 1;
 
     for i = 1:N
-        s = all_shifts(k);    
-        all_g(:,k) = r0 + (rmax.*exp((-(x-s).^2)./(2*sd.^2)));
+        s = all_shifts(k);
+        all_g(:,k) = exp((-(x-s).^2)./(2*sd.^2));
         k = k+1;
     end
     
@@ -16,10 +16,10 @@ function W = wMat(r0,rmax,sd,WEw,WIw,N)
            flip(flip(all_g(N+1:end,:),2));
     
     % Cummulative weight matrix
-    W = E*WEw;
+    W = E*Ww;
     
-    sunk = max(max(W))/2;
+    sunk = max(max(W))*sunkR;
        
-    W = W-sunk + randn(size(W))*WEw*.05;    
+    W = W-sunk + randn(size(W))*Ww*.05;    
 
 end
