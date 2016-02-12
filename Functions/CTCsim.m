@@ -7,8 +7,8 @@ gamma = S.gamma; eta = S.eta; Tau = S.Tau; Utype = S.Utype;
 
 
 % Initialization
-Y1 = zeros(N,N);
-Y2 = zeros(N,N);
+Y1 = zeros(N,1);
+Y2 = zeros(N,1);
 
 X1 = zeros(N,1);
 X2 = zeros(N,1);
@@ -20,30 +20,30 @@ for s=1:T/dt
         t = (s-1)*dt;        % Current time in ms
 
     %activation from PMd1
-    s_wY1 = sum(S.W12.*fct(Y1),1)';
+    s_wY1 = S.W12*fct(Y1);
 
     %activation from PMd2
-    s_wY2 = sum(S.W21.*fct(Y2),1)';
+    s_wY2 = S.W21*fct(Y2);
 
     %Unpacking W matrix into excitation and inhibition
     KE1   =  S.K1;   KE1(KE1<0) = 0;
-    KI1   =  -S.K1;   KI1(KI1<0) = 0;
+    KI1   = -S.K1;   KI1(KI1<0) = 0;
 
     KE2   =  S.K2;   KE2(KE2<0) = 0;
     KI2   = -S.K2;   KI2(KI2<0) = 0;
 
     %within-layer activation 1    
-    s_KE1 = sum(KE1.*fct(Y1),1)';
-    s_KI1 = sum(KI1.*fct(Y1),1)';
+    s_KE1 = KE1*fct(Y1);
+    s_KI1 = KI1*fct(Y1);
 
     %within-layer activation 2
-    s_KE2 = sum(KE2.*fct(Y2),1)';
-    s_KI2 = sum(KI2.*fct(Y2),1)';
+    s_KE2 = KE2*fct(Y2);
+    s_KI2 = KI2*fct(Y2);
 
 
     %% Calculating activity output and derivatives       
-    Y1 = repmat(max(X1-Tau,0),1,N); 
-    Y2 = repmat(max(X2-Tau,0),1,N); 
+    Y1 = max(X1-Tau,0); 
+    Y2 = max(X2-Tau,0); 
 
     if Utype == 1 %additive urgency 
         
@@ -65,7 +65,7 @@ for s=1:T/dt
     dX2 = -(alpha.*X2) + (beta - X2).*gamma.*E2 - X2.*s_KI2;
     
 if s == 300
-    s;
+    s;      %Debug trigger
 end
     
         dX1 = dX1 .* tau;
