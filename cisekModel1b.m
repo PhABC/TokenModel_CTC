@@ -1,16 +1,17 @@
 %% SIMPLIFIED VERSION WITH ONLY a 2-layer PMD
     %Each region is refered as R1 and R2.
 
-% ++++ SD for inhibition not implemented yet. 
-
+% ++++ SD for inhibition not implemented yet ?
+% ++++ proper output format for PCA decision manifold 
     
-% clear all;
 % close all;
 warning off all;
 clearvars -except seed
- 
-%  seed = rng;       %Saving seed
-%  rng(seed)           %Loading seed
+
+% Seed allow you to replay the same trial. Comment out 'seed' if you want to
+% reuse the previous trial. 
+  seed = rng;       %Saving seed (Comment out to reuse previous seed)
+  rng(seed)         %Loading seed
 
 %% Simulation parameters
 S.N      = 50;    % Nb of neurons
@@ -32,7 +33,7 @@ S.tau    = 0.005; % Time constant
 
     %Connections R1 to R2 
     S.Ww_12   = .05;   % Amplitude of weight R1 -> R2
-    S.Sunk_12 =  0.2;   % Proportion of sunking gaussian. 1 = all inhibitory.   
+    S.Sunk_12 =  0.2;  % Proportion of sunken gaussian. 1 = all inhibitory.   
     S.Wsd_12  = .1;    % 0 < sd < 1 ~ Standart deviation
     
     %Connections R2 to R1
@@ -43,9 +44,9 @@ S.tau    = 0.005; % Time constant
 % Weight within regions
 
     %R1 kernel
-    S.Ww_11   =  .15;    % Amplitude of weight R1 -> R1 
-    S.Sunk_11 =  .5;    % Proportion of sunking gaussian. 1 = all inhibitory.
-    S.Wsd_11  =  .1;     % 0 < sd < 1 ~ Standart deviation
+    S.Ww_11   =  .15;   % Amplitude of weight R1 -> R1 
+    S.Sunk_11 =  .5;    % Proportion of sunken gaussian. 1 = all inhibitory.
+    S.Wsd_11  =  .1;    % 0 < sd < 1 ~ Standart deviation
 
     %R2 kernel
     S.Ww_22   = .001;   
@@ -60,10 +61,10 @@ S.tau    = 0.005; % Time constant
 S.c      = 2;    % type : 1 = easy ~ 2 = misleading ~ 3 = ambiguous
 S.nbEx   = 1;    % Number of stimuli examples to present
 S.jumpT  = 50;   % interval between each jumps in ms (verify if work with T)
-S.stimW  = 5;  % Amplitude of stimuli ( 0< flip stimuli )
+S.stimW  = 6;    % Amplitude of stimuli ( 0< flip stimuli )
 
 % Bias parameters
-S.bias   = 10;    % Additive bias strength
+S.bias   = 10;   % Additive bias strength
 
 % Noise parameters
 S.fG     = 10;   % Fast gaussian noise strength (iid)
@@ -73,8 +74,8 @@ S.sG     = 0.1;  % Slow gaussian noise strength (shared noise)
 	%To note, origin and slope will be gaussian distributed for different trials
 S.Utype  = 2;	 % 1 = additive urgency signal ~ 2 = multiplicative urgency signal
 S.Uori   = 1;    % origin point for the linear function ~ put 
-S.Uslop  = 8;   % Slope of the linear urgency function 
-S.Uw     = 1;    % Amplitude of urgency signal [ consider Utype for this value ] 
+S.Uslop  = 8;    % Slope of the linear urgency function 
+S.Uw     = 2;    % Amplitude of urgency signal [ consider Utype for this value ] 
 
 
 %% Model parameters
