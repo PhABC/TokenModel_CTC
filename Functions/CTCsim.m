@@ -1,4 +1,4 @@
-function [M1,M2] = CTCsim(S)
+function [M1,M2,E] = CTCsim(S)
 %% Simulation
 
 %Unpacking fields
@@ -48,18 +48,16 @@ for s=1:T/dt
     if Utype == 1 %additive urgency 
         
         E1 = s_wY2 + s_KE1 + S.V(:,s) + S.S(:,s) + S.U(:,s);   
-        E2 = s_wY1 + s_KE2 + S.V(:,s);
+        E2 = s_wY1 + s_KE2 + S.V(:,s) + S.U(:,s);
 
     elseif Utype == 2 %Multiplicative urgency
 
         E1 = (s_wY2 + s_KE1 + S.V(:,s) + S.S(:,s)).* S.U(:,s);   
-        E2 = s_wY1 + s_KE2 + S.V(:,s); 
+        E2 = (s_wY1 + s_KE2 + S.V(:,s)).*S.U(:,s); 
 
     end
     
-    E1 = s_wY2 + s_KE1 + S.V(:,s)+S.S(:,s);   
-    E2 = s_wY1 + s_KE2 + S.V(:,s);
-
+    E(:,s) = E1;
 
     dX1 = -(alpha.*X1) + (beta - X1).*gamma.*E1 - X1.*s_KI1;
     dX2 = -(alpha.*X2) + (beta - X2).*gamma.*E2 - X2.*s_KI2;
