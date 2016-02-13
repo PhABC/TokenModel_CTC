@@ -1,10 +1,9 @@
 %% FigureCTC 
 % script for all the figures
 
-
 %% Stimuli
 subplot(4,1,1); 
-plot(sign(S.stimW)*S.stim,'x','linewidth',1); hold on;
+plot(sign(S.stimW)*S.stim(trial,:),'x','linewidth',1); hold on;
 plot(zeros(S.T,1),'m');                      hold off
 
 title('Stimuli');
@@ -45,4 +44,6 @@ xlabel('time (ms)');
 ylabel('Neurons');
 xlim([0,S.T])
 caxis([0,  S.beta ])
+hold off
 
+drawnow;

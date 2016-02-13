@@ -1,7 +1,6 @@
 %% SIMPLIFIED VERSION WITH ONLY a 2-layer PMD
     %Each region is refered as R1 and R2.
 
-% ++++ Urgency slope that can go above 1
 % ++++ SD for inhibition not implemented yet ?
 % ++++ proper output format for PCA decision manifold 
     
@@ -20,15 +19,16 @@ S.T      = 1000;  % Simulation time in ms
 S.onset  = 120;   % onset of trial in ms
 S.dt     = 1;     % Time step in ms
 S.tau    = 0.005; % Time constant
+plotting = 1;     % 1 = plotting ~ 0 = no plots
 
 %% Connections parameters
 %   To have a ff network, make weight from R2 to R1 to 0. Can adjust the
-%   strength of excitation and inhibition with WEw and WIw respectively.
+%   strength of excitation and inhibition by changing the amplitude ( Ww )
+%   and the proportion of the guassian that is negative (sunk).
 %
 %   The standar devations (SD) have to be between 0 and 1 as they are
 %   proportional to the number of neurons. More specifically, this sd value
-%   is multiplied by the number of neurons. **NOT IMPLEMENTED FOR
-%   INHIBITION**
+%   is multiplied by the number of neurons.
 
 % Weight between regions
 
@@ -46,8 +46,8 @@ S.tau    = 0.005; % Time constant
 
     %R1 kernel
     S.Ww_11   =  .2;   % Amplitude of weight R1 -> R1 
-    S.Sunk_11 =  .6;    % Proportion of sunken gaussian. 1 = all inhibitory.
-    S.Wsd_11  =  .1;    % 0 < sd < 1 ~ Standart deviation
+    S.Sunk_11 =  .6;   % Proportion of sunken gaussian. 1 = all inhibitory.
+    S.Wsd_11  =  .1;   % 0 < sd < 1 ~ Standart deviation
 
     %R2 kernel
     S.Ww_22   = .001;   
@@ -60,7 +60,7 @@ S.tau    = 0.005; % Time constant
 
 % Stimuli parameters
 S.c      = 2;    % type : 1 = easy ~ 2 = misleading ~ 3 = ambiguous
-S.nbEx   = 1;    % Number of stimuli examples to present
+S.nbEx   = 100;    % Number of stimuli examples to present
 S.jumpT  = 50;   % interval between each jumps in ms (verify if work with T)
 S.stimW  = 6;    % Amplitude of stimuli ( 0< flip stimuli )
 
@@ -99,10 +99,6 @@ S.hnorm = TuningCurve(r0,rmax,sd,N);
 
 %% Connections
 %Connections matrix
-% kau = 1.75;
-% rho = 0.25;
-% sig = 0.1;
-% [S.KE, S.KI]    = ConMatrix(kau,rho,sig,N);
 
 % K1 and K2 are internal activity kernel of each region. It is the 
 % equivalent of lateral connections within each region. 
@@ -112,8 +108,6 @@ S.K2  = wMat(S.Wsd_22*N, S.Ww_22,S.Sunk_22, N);
 %Weight matrix between regions
 S.W12 = wMat(S.Wsd_12*N, S.Ww_12, S.Sunk_12, N);
 S.W21 = wMat(S.Wsd_21*N, S.Ww_21, S.Sunk_21, N);
-
-
 
 %% Stimuli and Bias
 
@@ -151,10 +145,15 @@ for trial = 1:S.nbEx
     [ S.S, S.V, S.U, S.pref, S.npref ] = TrialInput(S,trial);
     [ M1,M2 ] = CTCsim(S);
     
+%   Figures
+    if plotting == 1 
+	FigureCTC
+    end
+
 end
 
-%% Figures
-FigureCTC 
+
+ 
 
 return;
 
