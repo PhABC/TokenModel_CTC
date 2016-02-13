@@ -45,8 +45,8 @@ S.tau    = 0.005; % Time constant
 % Weight within regions
 
     %R1 kernel
-    S.Ww_11   =  .15;   % Amplitude of weight R1 -> R1 
-    S.Sunk_11 =  .5;    % Proportion of sunken gaussian. 1 = all inhibitory.
+    S.Ww_11   =  .2;   % Amplitude of weight R1 -> R1 
+    S.Sunk_11 =  .6;    % Proportion of sunken gaussian. 1 = all inhibitory.
     S.Wsd_11  =  .1;    % 0 < sd < 1 ~ Standart deviation
 
     %R2 kernel
@@ -73,10 +73,10 @@ S.sG     = 0.1;  % Slow gaussian noise strength (shared noise)
 
 % Linear urgency parameters
 	%To note, origin and slope will be gaussian distributed for different trials
-S.Utype  = 2;	 % 1 = additive urgency signal ~ 2 = multiplicative urgency signal
+S.Utype  = 1;	 % 1 = additive urgency signal ~ 2 = multiplicative urgency signal
 S.Uori   = 1;    % origin point for the linear function ~ put 
-S.Uslop  = 8;    % Slope of the linear urgency function 
-S.Uw     = 2;    % Amplitude of urgency signal [ consider Utype for this value ] 
+S.Uslop  = .05;    % Slope of the linear urgency function 
+S.Uw     = .5;    % Amplitude of urgency signal [ consider Utype for this value ] 
 
 
 %% Model parameters
