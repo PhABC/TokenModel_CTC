@@ -31,7 +31,7 @@ ylim([0,101])
 
 %% Population PMD activity
 subplot(4,1,3)
-imagesc(circshift(M1,12,1)); hold on
+imagesc(circshift(M1,ceil(S.N/4),1)); hold on
 plot(S.onset,[0:001:S.N],'xk'); hold off
 
 title('PMD population  activity');
@@ -42,7 +42,7 @@ caxis([0,  S.beta ])
 
 %% Population M1 activity
 subplot(4,1,4)
-imagesc(circshift(M2,12,1)); hold on
+imagesc(circshift(M2,ceil(S.N/4),1)); hold on
 plot(S.onset,[0:001:S.N],'xk'); hold off
 
 title('M1 population activity');
