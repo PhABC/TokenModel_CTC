@@ -15,7 +15,7 @@ clearvars -except seed
   rng(seed)         %Loading seed
 
 %% Simulation parameters
-S.N      = 50;    % Nb of neurons
+S.N      = 100;    % Nb of neurons
 S.T      = 1000;  % Simulation time in ms
 S.onset  = 120;   % onset of trial in ms
 S.dt     = 1;     % Time step in ms
@@ -39,14 +39,14 @@ plotting = 1;     % 1 = plotting ~ 0 = no plots
     S.Wsd_12  = .05;    % 0 < sd < 1 ~ Standart deviation
     
     %Connections R2 to R1
-    S.Ww_21   =  .01;   
+    S.Ww_21   =  .0;   
     S.Sunk_21 =  .2;   
     S.Wsd_21  =  .05;   
     
 % Weight within regions
 
     %R1 kernel
-    S.Ww_11   =  .3;   % Amplitude of weight R1 -> R1 
+    S.Ww_11   =  .5;   % Amplitude of weight R1 -> R1 
     S.Sunk_11 =  .6;   % Proportion of sunken gaussian. 1 = all inhibitory.
     S.Wsd_11  =  .1;   % 0 < sd < 1 ~ Standart deviation
 
@@ -56,11 +56,10 @@ plotting = 1;     % 1 = plotting ~ 0 = no plots
     S.Wsd_22  = .1;   
     
 
-
 %% Input parameters
 
 % Stimuli parameters
-S.c      = 1;    % type : 1 = easy ~ 2 = misleading ~ 3 = ambiguous
+S.c      = 2;    % type : 1 = easy ~ 2 = misleading ~ 3 = ambiguous
 S.nbEx   = 1;    % Number of stimuli examples to present
 S.jumpT  = 50;   % interval between each jumps in ms (verify if work with T)
 S.stimW  = 3;    % Amplitude of stimuli ( 0< flip stimuli )
@@ -74,10 +73,11 @@ S.sG     = 0.1;  % Slow gaussian noise strength (shared noise)
 
 % Linear urgency parameters
 	%To note, origin and slope will be gaussian distributed for different trials
+S.Urand  = 0;	 % 1 = random slope every trial ~ 0 = same slope every trial
 S.Utype  = 1;	 % 1 = additive urgency signal ~ 2 = multiplicative urgency signal
 S.Uori   = 1;    % origin point for the linear function ~ put 
-S.Uslop  = 2;    % Slope of the linear urgency function 
-S.Uw     = 0.01;    % Amplitude of urgency signal [ consider Utype for this value ] 
+S.Uslop  = 3;    % Slope of the linear urgency function 
+S.Uw     = 0.015;    % Amplitude of urgency signal [ consider Utype for this value ] 
 
 
 %% Model parameters
