@@ -3,7 +3,7 @@ function [M1,M2,E] = CTCsim(S)
 
 %Unpacking fields
 N = S.N; T = S.T; dt = S.dt; tau = S.tau; alpha = S.alpha; beta = S.beta;
-gamma = S.gamma; Tau = S.Tau; Utype = S.Utype;
+gamma = S.gamma; Tau = S.Tau; Utype = S.Utype; steep = S.steep;
 
 
 % Initialization
@@ -20,10 +20,10 @@ for s=1:T/dt
         t = (s-1)*dt;        % Current time in ms
 
     %activation from PMd1
-    s_wY1 = S.W12*fct(Y1);
+    s_wY1 = S.W12*fct(Y1,steep_1);
 
     %activation from PMd2
-    s_wY2 = S.W21*fct(Y2);
+    s_wY2 = S.W21*fct(Y2,steep_2);
 
     %Unpacking W matrix into excitation and inhibition
     KE1   =  S.K1;   KE1(KE1<0) = 0;
@@ -33,12 +33,12 @@ for s=1:T/dt
     KI2   = -S.K2;   KI2(KI2<0) = 0;
 
     %within-layer activation 1    
-    s_KE1 = KE1*fct(Y1);
-    s_KI1 = KI1*fct(Y1);
+    s_KE1 = KE1*fct(Y1,steep_1);
+    s_KI1 = KI1*fct(Y1,steep_1);
 
     %within-layer activation 2
-    s_KE2 = KE2*fct(Y2);
-    s_KI2 = KI2*fct(Y2);
+    s_KE2 = KE2*fct(Y2,steep_2);
+    s_KI2 = KI2*fct(Y2,steep_2);
 
 
     %% Calculating activity output and derivatives       
