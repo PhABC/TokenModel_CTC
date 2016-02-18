@@ -1,6 +1,6 @@
 Meeting on 01/02/2016
 
-+ Put some trigger parameters at the beginning of script for each region
+X + Put some trigger parameters at the beginning of script for each region
 	and each condition (e.g. M1+NL+reccurent/M1+Linear+reccurent...)
 
 + Does urgency needs to be applied to both region in a similar matter or

@@ -1,12 +1,12 @@
 DATE : 22/01/2016
 
 Meeting notes:
-	+ Make the model more attractor (could be activity too low)
-	+ Urgency looks additive at neuron level, but 
+X	+ Make the model more attractor (could be activity too loww
+X	+ Urgency looks additive at neuron level, but
 		multiplicative at the behavior level.
-	+ Start with multiplicative urgency 
+X	+ Start with multiplicative urgency
 	+ Linear urgency signal from data (depends on trial types)
-	+ Using trials from data
+X	+ Using trials from data
 	+ Will need to optimize code eventually
 	+ Interesting question : how is the linear distance in input maintained
 	+ Treshold with difference in activity (PMD)  (perhaps 16 Hz)
