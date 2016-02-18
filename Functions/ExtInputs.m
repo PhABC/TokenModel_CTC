@@ -43,8 +43,8 @@ function [ urg,stim,SG ] = ExtInputs(S,Stim)
 
 %Creating gauss distribution   
 if S.Urand
-   urg  = urg .* abs(repmat(randn(nbEx,1)+Uslop,1,T))...  % Random slopes
-               + repmat(0.1*randn(nbEx,1)+Uori,1,T);      % Random origins
+   urg  = urg  + urg .* abs(repmat(randn(nbEx,1)*.5,1,T)) + ...  % Random slopes
+          uori + repmat(0.1*randn(nbEx,1),1,T);      % Random origins
 end
 %    urg  = urg/max(urg(:,end));                            % Normalized
    urg(urg<0) = 0;                                        % Del values < 0
