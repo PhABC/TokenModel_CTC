@@ -1,0 +1,14 @@
+Ideas:
+
+
+
+To do :
+
+	+Find the threshold with perturbation
+X	+Verify misleading
+	+Commitment aligment
+~	+Have similar output than Neuron paper in 2014
+	+heterogenoeus gains for urgency between cells
+X	+Change prefered and non prefered
+X	+Change plotting of pupulation activity for left vs right
+	+Parameter to choose function parameters
