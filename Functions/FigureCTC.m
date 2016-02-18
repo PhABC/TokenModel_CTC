@@ -29,23 +29,23 @@ xlim([0,S.T])
 ylim([0,101])
 
 
-%% Population 1 activity
+%% Population PMD activity
 subplot(4,1,3)
-imagesc(M1); hold on
+imagesc(circshift(M1,12,1)); hold on
 plot(S.onset,[0:001:S.N],'xk'); hold off
 
-title('Population 1 activity');
+title('PMD population  activity');
 xlabel('time (ms)');
 ylabel('Neurons');
 xlim([0,S.T])
 caxis([0,  S.beta ])
 
-%% Population 2 activity
+%% Population M1 activity
 subplot(4,1,4)
-imagesc(M2); hold on
+imagesc(circshift(M2,12,1)); hold on
 plot(S.onset,[0:001:S.N],'xk'); hold off
 
-title('Population 2 activity');
+title('M1 population activity');
 xlabel('time (ms)');
 ylabel('Neurons');
 xlim([0,S.T])

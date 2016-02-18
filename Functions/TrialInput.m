@@ -22,8 +22,8 @@ function [ stim,V,U,pref,npref ] = TrialInput(S,trial)
   
 %Neurons preference with token orientation
   hstim  = S.hnorm .* repmat(tokG,1,N);             
-  pref   = sum(hstim)>0;
-  npref  = sum(hstim)<0;
+  pref   = sum(hstim)> .4;
+  npref  = sum(hstim)<-.4;
   
 %Cummulative input for each neurons based on stim and pref 
   stim   = hstim'   * repmat(S.stim(trial,:),360,1) * stimW;
