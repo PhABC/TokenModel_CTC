@@ -21,5 +21,5 @@ function W = wMat(sd,Ww,sunkR,N)
     sunk = max(max(W))*sunkR;
        
     W = W-sunk + randn(size(W))*Ww*.05;    
-
+    W = W.*100/N;			%Normalize wrt 100 as parameters were found with 100 N
 end
