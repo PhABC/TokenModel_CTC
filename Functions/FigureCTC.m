@@ -4,7 +4,9 @@
 %% Stimuli
 subplot(4,1,1); 
 plot(sign(S.stimW)*S.stim(trial,:),'x','linewidth',1); hold on;
-plot(zeros(S.T,1),'m');                      hold off
+plot(zeros(S.T,1),'m');                      
+plot(S.onset,[-16:001:16],'xk'); hold off
+
 
 title('Stimuli');
 ylabel('Token right - Token Left');
@@ -15,7 +17,8 @@ ylim([-16,16])
 %% Prefered direction VS non prefered
 subplot(4,1,2)
 plot(mean(M1(S.npref,:)),'r','linewidth',2); hold on
-plot(mean(M1(S.pref, :)),'g','linewidth',2); hold off
+plot(mean(M1(S.pref, :)),'g','linewidth',2);
+plot(S.onset,[0:001:S.beta],'xk'); hold off
 
 set(gca,'Linewidth',3);
 set(gca,'FontSize',40);
@@ -28,7 +31,9 @@ ylim([0,101])
 
 %% Population 1 activity
 subplot(4,1,3)
-imagesc(M1)
+imagesc(M1); hold on
+plot(S.onset,[0:001:S.N],'xk'); hold off
+
 title('Population 1 activity');
 xlabel('time (ms)');
 ylabel('Neurons');
@@ -37,7 +42,8 @@ caxis([0,  S.beta ])
 
 %% Population 2 activity
 subplot(4,1,4)
-imagesc(M2)
+imagesc(M2); hold on
+plot(S.onset,[0:001:S.N],'xk'); hold off
 
 title('Population 2 activity');
 xlabel('time (ms)');
