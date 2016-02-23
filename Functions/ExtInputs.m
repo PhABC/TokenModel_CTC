@@ -6,11 +6,16 @@ function [ urg,stim,SG ] = ExtInputs(S,Stim)
 %Unpacking fields
    T=S.T; dt=S.dt; nbEx=S.nbEx; c=S.c;jumpT=S.jumpT; 
    Uslop=S.Uslop; onset=S.onset; Uw=S.Uw; Uori=S.Uori;
-
+   urgmax=S.urgmax; exRan=S.exRan; exNum=S.exNum;
      
 %Initializing
+if ~c
+   nstim   = Stim.nbStimR;               %Number of stim of chosen c
+   stimRaw = Stim.stimRawR; %Trials for condition c
+else   
    nstim   = Stim.nbStim{c};               %Number of stim of chosen c
-   stimRaw = Stim.stimRawR(Stim.idx{c},:); %Trials foc condition c
+   stimRaw = Stim.stimRawR(Stim.idx{c},:); %Trials for condition c
+end
    
 %Logic matrix to expand stimuli wrt T
    timeLogiMat = zeros(15,T);
@@ -29,8 +34,12 @@ function [ urg,stim,SG ] = ExtInputs(S,Stim)
    stimAll = stimRaw*timeLogiMat;   %Stimuli from c expanded wrt T
    
 %Choosing examples
-   idx     = randi(nstim,[nbEx,1]); %Select nbEx random integer within nstim
-   stim    = stimAll(idx,:);
+   if ~ exRan
+	idx = exNum;
+   else
+   	idx = randi(nstim,[nbEx,1]); %Select nbEx random integer within nstim
+   end
+   stim = stimAll(idx,:);
    
 %% Urgency   
 %Baseline urgency signal
@@ -50,6 +59,7 @@ end
    urg(urg<0) = 0;                                        % Del values < 0
 
    urg = urg*Uw;
+   urg(urg>urgmax) = urgmax; %max urg 
 
 %% Slow noise
     tauSG = 500;                          % time constant of slow noise in ms
