@@ -16,8 +16,8 @@ ylim([-16,16])
 
 %% Prefered direction VS non prefered
 subplot(4,1,2)
-plot(mean(M1(S.npref,:)),'r','linewidth',2); hold on
-plot(mean(M1(S.pref, :)),'g','linewidth',2);
+plot(mean(M1(S.npref,1:abs(commit)+99)),'r','linewidth',2); hold on
+plot(mean(M1(S.pref, 1:abs(commit)+99)),'g','linewidth',2);
 plot(S.onset,[0:001:S.beta],'xk'); hold off
 
 set(gca,'Linewidth',3);
