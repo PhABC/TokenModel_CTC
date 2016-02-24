@@ -3,9 +3,9 @@
 
 %% Stimuli
 subplot(4,1,1); 
-plot(sign(S.stimW)*S.stim(trial,:),'x','linewidth',1); hold on;
+plot(sign(S.stimW)*S.stim{net}(trial,:),'x','linewidth',1); hold on;
 plot(zeros(S.T,1),'m');                      
-plot(S.onset,[-16:001:16],'xk'); hold off
+plot(S.onset,-16:001:16,'xk'); hold off
 
 
 title('Stimuli');
@@ -16,9 +16,14 @@ ylim([-16,16])
 
 %% Prefered direction VS non prefered
 subplot(4,1,2)
-plot(mean(M1(S.npref,1:min(abs(commit)+99,S.T))),'r','linewidth',2); hold on
-plot(mean(M1(S.pref, 1:min(abs(commit)+99,S.T))),'g','linewidth',2);
-plot(S.onset,[0:001:S.beta],'xk'); hold off
+if ~commit(trial)
+    plot(mean(PMD_(npref,:)),'r','linewidth',2); hold on
+    plot(mean(PMD_(pref ,:)),'g','linewidth',2);
+else
+    plot(mean(PMD_(npref,1:min(abs(commit(trial))+S.aftcmt/S.dt,S.T))),'r','linewidth',2); hold on
+    plot(mean(PMD_(pref, 1:min(abs(commit(trial))+S.aftcmt/S.dt,S.T))),'g','linewidth',2);
+end
+plot(S.onset,0:001:S.beta,'xk'); hold off
 
 set(gca,'Linewidth',3);
 set(gca,'FontSize',40);
@@ -31,8 +36,8 @@ ylim([0,101])
 
 %% Population PMD activity
 subplot(4,1,3)
-imagesc(circshift(M1,ceil(S.N/4),1)); hold on
-plot(S.onset,[0:001:S.N],'xk'); hold off
+imagesc(circshift(PMD_,ceil(S.N/4),1)); hold on
+plot(S.onset,0:001:S.N,'xk'); hold off
 
 title('PMD population  activity');
 xlabel('time (ms)');
@@ -42,8 +47,8 @@ caxis([0,  S.beta ])
 
 %% Population M1 activity
 subplot(4,1,4)
-imagesc(circshift(M2,ceil(S.N/4),1)); hold on
-plot(S.onset,[0:001:S.N],'xk'); hold off
+imagesc(circshift(M1_,ceil(S.N/4),1)); hold on
+plot(S.onset,0:001:S.N,'xk'); hold off
 
 title('M1 population activity');
 xlabel('time (ms)');

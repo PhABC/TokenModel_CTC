@@ -5,7 +5,7 @@ function [ urg,stim,SG ] = ExtInputs(S,Stim)
 %% Stimuli
 %Unpacking fields
    T=S.T; dt=S.dt; nbEx=S.nbEx; c=S.c;jumpT=S.jumpT; 
-   Uslop=S.Uslop; onset=S.onset; Uw=S.Uw; Uori=S.Uori;
+   Uslop=S.Uslop; onset=S.onset; Uw=S.Uw;
    urgmax=S.urgmax; exRan=S.exRan; exNum=S.exNum;
      
 %Initializing

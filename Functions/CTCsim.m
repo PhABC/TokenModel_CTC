@@ -1,41 +1,39 @@
-function [M1,M2,commit] = CTCsim(S) %% Simulation
+function [A1,A2,commit] = CTCsim(S,net,St,V,U,pref,npref) %% Simulation
 
 %Unpacking fields 
 N = S.N; T = S.T; dt = S.dt; tau = S.tau; alpha = S.alpha; beta = S.beta;
-gamma = S.gamma; Tau = S.Tau; Utype = S.Utype; steep_1 = S.steep_1;
-steep_2 = S.steep_2; tresh=S.tresh; pref=S.pref; npref=S.npref;
-
+gamma = S.gamma; Tau = S.Tau; Utype = S.Utype; steep = S.steep; tresh=S.tresh;
 
 % Initialization 
 Y1 = zeros(N,1); Y2 = zeros(N,1);
 X1 = zeros(N,1); X2 = zeros(N,1);
-M1 = zeros(N,T); M2 = zeros(N,T);
+A1 = zeros(N,T); A2 = zeros(N,T);
 
 commit = 0; %If commit stays 0, it means the network didn't cross tresh
 
 for s=1:T
         t = (s-1)*dt; % Current time in ms
 
-    %activation from PMd1
-    s_wY1 = S.W12*fct(Y1,steep_1);
+    %activation from PMd1 to M1
+    s_wY1 = S.W{net}{1,2}*fct(Y1,steep(1));
 
-    %activation from PMd2
-    s_wY2 = S.W21*fct(Y2,steep_2);
+    %activation from M1 to PMd
+    s_wY2 = S.W{net}{2,1}*fct(Y2,steep(2));
 
     %Unpacking W matrix into excitation and inhibition
-    KE1 = S.K1; KE1(KE1<0) = 0;
-    KI1 = -S.K1; KI1(KI1<0) = 0;
+    KE1 =  S.W{net}{1,1}; KE1(KE1<0) = 0;
+    KI1 = -S.W{net}{1,1}; KI1(KI1<0) = 0;
 
-    KE2 = S.K2; KE2(KE2<0) = 0;
-    KI2 = -S.K2; KI2(KI2<0) = 0;
+    KE2 =  S.W{net}{2,2}; KE2(KE2<0) = 0;
+    KI2 = -S.W{net}{2,2}; KI2(KI2<0) = 0;
 
     %within-layer activation 1
-    s_KE1 = KE1*fct(Y1,steep_1);
-    s_KI1 = KI1*fct(Y1,steep_1);
+    s_KE1 = KE1*fct(Y1,steep(1));
+    s_KI1 = KI1*fct(Y1,steep(1));
 
     %within-layer activation 2
-    s_KE2 = KE2*fct(Y2,steep_2);
-    s_KI2 = KI2*fct(Y2,steep_2);
+    s_KE2 = KE2*fct(Y2,steep(2));
+    s_KI2 = KI2*fct(Y2,steep(2));
 
     %% Calculating activity output and derivatives
     Y1 = max(X1-Tau,0);
@@ -43,21 +41,20 @@ for s=1:T
 
     if Utype == 1 %additive urgency
         
-        E1 = s_wY2 + s_KE1 + S.V(:,s) + S.S(:,s) + S.U(:,s);
-        E2 = s_wY1 + s_KE2 + S.V(:,s) + S.U(:,s);
+        E1 = s_wY2 + s_KE1 + V(:,s) + St(:,s) + U(:,s);
+        E2 = s_wY1 + s_KE2 + V(:,s) + U(:,s);
 
     elseif Utype == 2 %Multiplicative urgency
 
-        E1 = (s_wY2 + s_KE1 + S.V(:,s) + S.S(:,s)).* S.U(:,s);
-        E2 = (s_wY1 + s_KE2 + S.V(:,s)).*S.U(:,s);
+        E1 = ( s_wY2 + s_KE1 + V(:,s) + St(:,s) ).*U(:,s);
+        E2 = ( s_wY1 + s_KE2 + V(:,s) ).*U(:,s);
 
     end
     
     dX1 = -(alpha.*X1) + (beta - X1).*gamma.*E1 - X1.*s_KI1;
     dX2 = -(alpha.*X2) + (beta - X2).*gamma.*E2 - X2.*s_KI2;
 
-%Debug trigger
-if s == 300; s; end
+% if s == 300; s; end %Debug trigger
     
     dX1 = dX1 .* tau;
     dX2 = dX2 .* tau;
@@ -65,8 +62,8 @@ if s == 300; s; end
     X1 = X1 + dX1*dt;
     X2 = X2 + dX2*dt;
 
-    M1(:,s) = X1;
-    M2(:,s) = X2;
+    A1(:,s) = X1;
+    A2(:,s) = X2;
 
 %% Treshold
     diffPop = mean(X1(pref)) - mean(X2(npref));
@@ -76,7 +73,7 @@ if s == 300; s; end
     end
 
     %To let run the simulation a bit longer.
-    if t == abs(commit)+100 && commit ~= 0
+    if t == abs(commit)+S.aftcmt && commit ~= 0
 	    break
     end
 

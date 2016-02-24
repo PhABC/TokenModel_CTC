@@ -1,13 +1,21 @@
 %% SIMPLIFIED VERSION WITH ONLY a 2-layer PMD
     %Each region is refered as R1 and R2.
 
+%% Note : 
+% Script is currently formated to ease writing, but this increases 
+% the stress on the ram for paralell computing.proportionnaly to the nb of
+% neurons. This can be change with a little effort.
+
+%% To do :
 % ++++ SD for inhibition not implemented yet ?
 % ++++ proper output format for PCA decision manifold 
-% ++++ Clip urgency so it doesn't go crazy at the end
 
+%% Global commands
 % close all;
+clc
 warning off all;
 clearvars -except seed
+tic
 
 % Seed allow you to replay the same trial. Comment out 'seed' if you want to
 % reuse the previous trial. 
@@ -15,12 +23,22 @@ clearvars -except seed
   rng(seed)         %Loading seed
 
 %% Simulation parameters
-S.N      = 200;  % Nb of neurons per population
-S.T      = 1000;  % Simulation time in ms
+S.N      = 50;  % Nb of neurons per population
+S.T      = 1500; % Simulation time in ms
+S.tresh  = 35;	 % Difference between the 2 populations for commitment time
+S.aftcmt = 100;  % Stop simulation after X ms
+
+S.nbEx   = 100;   % Number of stimuli examples to present
+S.nbNet  = 10;	 % Number of different networks (neurons with different parameters)
+
 S.onset  = 120;   % onset of trial in ms
 S.dt     = 1;     % Time step in ms
 S.tau    = 0.005; % Time constant
-plotting = 1;     % 1 = plotting ~ 0 = no plots
+
+paralComp  = 0;   % run code in parallel if == 1
+nbWorkers  = 4;   % Number of workers for parallel computing
+S.plotting = 1;   % 1 = plotting ~ 0 = no plots
+S.printDec = 1;   % Print decision of network
 
 %% Activation function parameters
 %   The steepness of the sigmoid is determined by the parameter 'steep'.
@@ -29,8 +47,8 @@ plotting = 1;     % 1 = plotting ~ 0 = no plots
 %   and bottom values drasticaly. Could be replaced by pure linear if 
 %   real linear regime matters. 
  
-S.steep_1 = 0.16; %Steepness of activation function for population 1
-S.steep_2 = 0.04; %Steepness of activation function for population 2
+S.steep(1) = 0.16; %Steepness of activation function for population 1
+S.steep(2) = 0.04; %Steepness of activation function for population 2
 
 %% Connections parameters
 %   To have a ff network, make weight from R2 to R1 to 0. Can adjust the
@@ -44,38 +62,44 @@ S.steep_2 = 0.04; %Steepness of activation function for population 2
 % Weight between regions
 
     %Connections R1 to R2 
-    S.Ww_12   = .01;   % Amplitude of weight R1 -> R2
-    S.Sunk_12 =  0.2;  % Proportion of sunken gaussian. 1 = all inhibitory.   
-    S.Wsd_12  = .05;    % 0 < sd < 1 ~ Standart deviation
+    S.Ww(1,2)   = .3;   % Amplitude of weight R1 -> R2
+    S.Sunk(1,2) = .2;   % Proportion of sunken gaussian. 1 = all inhibitory.   
+    S.Wsd(1,2)  = .05;  % 0 < sd < 1 ~ Standart deviation
     
     %Connections R2 to R1
-    S.Ww_21   =  .0;   
-    S.Sunk_21 =  .2;   
-    S.Wsd_21  =  .05;   
+    S.Ww(2,1)   =  .0;   
+    S.Sunk(2,1) =  .2;   
+    S.Wsd(2,1)  =  .05;   
     
 % Weight within regions
 
     %R1 kernel
-    S.Ww_11   =  .5;   % Amplitude of weight R1 -> R1 
-    S.Sunk_11 =  .6;   % Proportion of sunken gaussian. 1 = all inhibitory.
-    S.Wsd_11  =  .1;   % 0 < sd < 1 ~ Standart deviation
+    S.Ww(1,1)   =  .5;   % Amplitude of weight R1 -> R1 
+    S.Sunk(1,1) =  .6;   % Proportion of sunken gaussian. 1 = all inhibitory.
+    S.Wsd(1,1)  =  .1;   % 0 < sd < 1 ~ Standart deviation
 
     %R2 kernel
-    S.Ww_22   = .15;   
-    S.Sunk_22 = .6; 
-    S.Wsd_22  = .1;   
+    S.Ww(2,2)   = .15;   
+    S.Sunk(2,2) = .6; 
+    S.Wsd(2,2)  = .1;   
     
-
 %% Input parameters
 
 % Stimuli parameters
-S.c      = 2;    % type : 1 = easy ~ 2 = misleading ~ 3 = ambiguous
-S.nbEx   = 10;    % Number of stimuli examples to present
+S.c      = 0;    % type : 0 = all | 1 = easy | 2 = misleading | 3 = ambiguous | 4 = others 
+S.exRan  = 1;	 % 0 = specified trial ~ 1 = random trial ;
+S.exNum  = 330;  % Specifyin trial number if non random
+
 S.jumpT  = 50;   % interval between each jumps in ms (verify if work with T)
-S.stimW  = 3;    % Amplitude of stimuli ( 0< flip stimuli )
+S.stimW  = 4;    % Amplitude of stimuli ( 0< flip stimuli )
+
+% Tuning curves (homogeneous)
+r0   = 0;       % Baseline      
+rmax = 0.01;    % Peak max
+sd   = 30;      % Standart deviation of tuning curve             
 
 % Bias parameters
-S.bias   = 5;   % Additive bias strength
+S.bias   = 5;    % Additive bias strength
 
 % Noise parameters
 S.fG     = 10;   % Fast gaussian noise strength (iid)
@@ -85,56 +109,43 @@ S.sG     = 0.1;  % Slow gaussian noise strength (shared noise)
 	%To note, origin and slope will be gaussian distributed for different trials
 S.Urand  = 0;	 % 1 = random slope every trial ~ 0 = same slope every trial
 S.Utype  = 1;	 % 1 = additive urgency signal ~ 2 = multiplicative urgency signal
-S.Uori   = 100;  % origin point for the linear function ~ put 
-S.Uslop  = 3;     % Slope of the linear urgency function 
-S.Uw     = 0.015;    % Amplitude of urgency signal [ consider Utype for this value ] 
 
+S.Uori   = 0;    % origin point for the linear function ~ put 
+S.Uslop  = 4;    % Slope of the linear urgency function 
+S.Uw     = 0.015;    % Amplitude of urgency signal [ consider Utype for this value ] 
+S.urgmax = 30;
 
 %% Model parameters
-S.alpha = 10;    %  Decay factor 
+S.alpha = 15;    %  Decay factor 
 S.beta  = 100;   %  Maximum activity value
 S.gamma = 1;     %  Excitation ratio
 S.Tau   = 0;     %  
 
+%% Initialization
 % Unwrapping certain parameters
-N = S.N;
-
-
-%% Tuning curves (homogeneous)
-r0   = 0;       % Baseline      
-rmax = 0.01;    % Peak max
-sd   = 30;      % Standart deviation of tuning curve             
-
-S.hnorm = TuningCurve(r0,rmax,sd,N);
-
-
-%% Connections
-%Connections matrix
-
-% K1 and K2 are internal activity kernel of each region. It is the 
-% equivalent of lateral connections within each region. 
-S.K1  = wMat(S.Wsd_11*N, S.Ww_11,S.Sunk_11, N);
-S.K2  = wMat(S.Wsd_22*N, S.Ww_22,S.Sunk_22, N);
-
-%Weight matrix between regions
-S.W12 = wMat(S.Wsd_12*N, S.Ww_12, S.Sunk_12, N);
-S.W21 = wMat(S.Wsd_21*N, S.Ww_21, S.Sunk_21, N);
-
-%% Stimuli and Bias
+N = S.N; Wsd=S.Wsd;
+Ww=S.Ww; Sunk=S.Sunk;
 
 %Expanding time with dt
 S.T     = floor(S.T/S.dt);      
 S.onset = floor(S.onset/S.dt);
 S.jumpT = floor(S.jumpT/S.dt);
 
+%Creating matrices for general results
+% Dat.full   =  cell(S.nbNet,S.nbEx);
+M1     =  cell(S.nbNet,S.nbEx);
+PMD    =  cell(S.nbNet,S.nbEx);
+commit = zeros(S.nbNet,S.nbEx);
+
+%% Stimuli creation
 %Creating and saving or loading raw stimuli
 if ~exist('Stim','var')
     if exist('StimRaw.mat','file') == 2
-        
+
         load('StimRaw')
-    
+
     elseif ~exist('StimRaw.mat','file')
-    
+
         fprintf('\nCreating and saving stimuli in cd ...\n\n')
         Stim = stimCreation();            % Creating raw stim
         save([pwd '/StimRaw.mat'],'Stim') % Saving variables
@@ -142,31 +153,74 @@ if ~exist('Stim','var')
     end
 end
 
-%Creating inputs
-fprintf('\nExternal input creation ... \n');
-[ S.urg,S.stim,S.SG ] = ExtInputs(S,Stim);
+%% Creating networks
+% Creating new networks at every loop with basic parameters changing (W,tuning, etc.)
 
-%% SIMULATION
-fprintf('Simulation ...\n\n')
+fprintf('Creating %d networks ... \n',S.nbNet);
+for net = 1:S.nbNet
 
-for trial = 1:S.nbEx
-    
-    fprintf('Trial %d of %d \n',trial,S.nbEx) 
-    % stimuli preferences are also assigned in the following fct
-    [ S.S, S.V, S.U, S.pref, S.npref ] = TrialInput(S,trial);
-    [ M1,M2 ] = CTCsim(S);
-    
-%   Figures
-    if plotting == 1 
-	FigureCTC
-    end
+    %% Tuning Curve
+ 	S.hnorm{net} = TuningCurve(r0,rmax,sd,N);
 
+	%% Connections
+	%Connections matrix
+
+	% K1 and K2 are internal activity kernel of each region. It is the 
+	% equivalent of lateral connections within each region. 
+ 	S.W{net}{1,1}  = wMat(Wsd(1,1)*N, Ww(1,1),Sunk(1,1), N);
+ 	S.W{net}{2,2}  = wMat(Wsd(2,2)*N, Ww(2,2),Sunk(2,2), N);
+
+	%Weight matrix between regions
+ 	S.W{net}{1,2} = wMat(Wsd(1,2)*N, Ww(1,2), Sunk(1,2), N);
+ 	S.W{net}{2,1} = wMat(Wsd(2,1)*N, Ww(2,1), Sunk(2,1), N);
+% 
+	%% Stimuli and Bias
+
+	%Creating inputs
+ 	[ S.urg{net},S.stim{net},S.SG{net}] = ExtInputs(S,Stim);
 end
 
 
+	%% SIMULATION
+	
  
+ if paralComp
+     fprintf('Simulation in parallel...\n\n')
+     % Preventing outputs
+     S.plotting = 0;   
+     S.printDec = 0;   
+     
+     parpool(nbWorkers) %open pools
+     parfor net = 1:S.nbNet
 
-return;
+       fprintf('\nSimulating %d trials for Network %d ...\n',S.nbEx,net)  
+          [PMD{net},M1{net},commit(net,:)] = trialLoop(S,net);
+
+     end
+    delete(gcp) %close pools
+    
+ else
+     fprintf('Simulation ...\n\n')
+     for net = 1:S.nbNet
+        
+      fprintf('\nSimulating %d trials for Network %d ...\n',S.nbEx,net)  
+          [PMD{net},M1{net},commit(net,:)] = trialLoop(S,net);
+
+     end
+     
+ end
+     
+
+% 	%Saving values
+% % 	    Dat.PMD{net}    = PMD(S.pref,:);
+% % 	    Dat.M1{net,trial}     =  M1(S.pref,:);
+% % 	    Dat.commit(net,trial) = commit;
+% 	end
+% end
+
+ 
+fprintf('\nTotal time taken in seconds : %f \n',toc)
+
 
 %PCA
 % [Up Sp Vp] = pca(M1(pref,:));   %Was pca2 before 
