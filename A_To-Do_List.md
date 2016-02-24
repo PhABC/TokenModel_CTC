@@ -7,5 +7,6 @@
 - [X] Attractor like dynamics
 - [ ] Vector parameters for neurons parameters
 - [X] Vectorization
-- [ ] Parrallel processing
+- [X] Parrallel processing
 - [ ] Format suitable for PCA like real data
+- [ ] Find treshold with phase space analysis
