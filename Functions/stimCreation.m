@@ -50,8 +50,8 @@ Stim.def{2}  = [ 0,0,  0,  0,0,0,0,0,0,0,0,0,0,0, 0.5 ; ...
                  0,0, 0.3, 0,0,0,0,0,0,0,0,0,0,0,  0 ];
 
 %Ambiguous trials
-Stim.def{3}  = [ 0,  0.4, 0.38 ,0, 0.55, 0, 0.55, 0,0,0,0,0,0,0, 0.5  ; ...
-                 0,  0.6, 0.65, 0, 0.66, 0, 0.66, 0,0,0,0,0,0,0,  0  ];
+Stim.def{3}  = [ 0,  0.4, 0.38 ,0, 0.55, 0, 0.55, 0,0,0,0,0.4,0,0, 0.5  ; ...
+                 0,  0.6, 0.65, 0, 0.66, 0, 0.66, 0,0,0,0,0.6,0,0,  0  ];
 
 %Classifying                
 nonclass = ones(Stim.nbStimR ,1);
@@ -71,7 +71,7 @@ for c = 1:length(Stim.def)       %Skipping category 'Others'
     nonclass = nonclass - Stim.logIdx{c}; %Every trial that is not classified
 end
 
-Stim.logIdx{end+1} = nonclass;              %Saving in the 'Others' class
+Stim.logIdx{end+1} = logical(nonclass);              %Saving in the 'Others' class
 Stim.idx{end+1}    = find(Stim.logIdx{end} == 1);
 
 Stim.nbStim{1} = length(Stim.idx{1});
