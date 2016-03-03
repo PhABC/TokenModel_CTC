@@ -23,20 +23,21 @@ tic
   rng(seed)         %Loading seed
 
 %% Simulation parameters
-S.N      = 50;  % Nb of neurons per population
-S.T      = 1500; % Simulation time in ms
-S.tresh  = 35;	 % Difference between the 2 populations for commitment time
-S.aftcmt = 100;  % Stop simulation after X ms
+S.N      = 200;   % Nb of neurons per population
+S.T      = 2000;  % Simulation time in ms
+S.tresh  = 35;	  % Difference between the 2 populations for commitment time
 
 S.nbEx   = 100;   % Number of stimuli examples to present
-S.nbNet  = 10;	 % Number of different networks (neurons with different parameters)
-
+S.nbNet  = 2;	  % Number of different networks (neurons with different parameters)
+    
 S.onset  = 120;   % onset of trial in ms
+S.aftcmt = 100;   % Stop simulation after X ms
 S.dt     = 1;     % Time step in ms
 S.tau    = 0.005; % Time constant
 
 paralComp  = 0;   % run code in parallel if == 1
 nbWorkers  = 4;   % Number of workers for parallel computing
+saveFR     = 1;   % Will save FR in current dir if == 1
 S.plotting = 1;   % 1 = plotting ~ 0 = no plots
 S.printDec = 1;   % Print decision of network
 
@@ -86,7 +87,7 @@ S.steep(2) = 0.04; %Steepness of activation function for population 2
 %% Input parameters
 
 % Stimuli parameters
-S.c      = 0;    % type : 0 = all | 1 = easy | 2 = misleading | 3 = ambiguous | 4 = others 
+S.c      = 2;    % type : 0 = all | 1 = easy | 2 = misleading | 3 = ambiguous | 4 = others                  
 S.exRan  = 1;	 % 0 = specified trial ~ 1 = random trial ;
 S.exNum  = 330;  % Specifyin trial number if non random
 
@@ -97,6 +98,7 @@ S.stimW  = 4;    % Amplitude of stimuli ( 0< flip stimuli )
 r0   = 0;       % Baseline      
 rmax = 0.01;    % Peak max
 sd   = 30;      % Standart deviation of tuning curve             
+
 
 % Bias parameters
 S.bias   = 5;    % Additive bias strength
@@ -111,7 +113,7 @@ S.Urand  = 0;	 % 1 = random slope every trial ~ 0 = same slope every trial
 S.Utype  = 1;	 % 1 = additive urgency signal ~ 2 = multiplicative urgency signal
 
 S.Uori   = 0;    % origin point for the linear function ~ put 
-S.Uslop  = 4;    % Slope of the linear urgency function 
+S.Uslop  = 3;    % Slope of the linear urgency function 
 S.Uw     = 0.015;    % Amplitude of urgency signal [ consider Utype for this value ] 
 S.urgmax = 30;
 
@@ -120,6 +122,11 @@ S.alpha = 15;    %  Decay factor
 S.beta  = 100;   %  Maximum activity value
 S.gamma = 1;     %  Excitation ratio
 S.Tau   = 0;     %  
+
+%% Data format parameters
+startBin = 300;	 % Time before commitment 
+nbins    = 80;                        
+% Time after  commitment is the end of trial
 
 %% Initialization
 % Unwrapping certain parameters
@@ -133,9 +140,9 @@ S.jumpT = floor(S.jumpT/S.dt);
 
 %Creating matrices for general results
 % Dat.full   =  cell(S.nbNet,S.nbEx);
-M1     =  cell(S.nbNet,S.nbEx);
-PMD    =  cell(S.nbNet,S.nbEx);
-commit = zeros(S.nbNet,S.nbEx);
+M1     =  cell(S.nbEx,S.nbNet);
+PMD    =  cell(S.nbEx,S.nbNet);
+commit = zeros(S.nbEx,S.nbNet);
 
 %% Stimuli creation
 %Creating and saving or loading raw stimuli
@@ -156,7 +163,7 @@ end
 %% Creating networks
 % Creating new networks at every loop with basic parameters changing (W,tuning, etc.)
 
-fprintf('Creating %d networks ... \n',S.nbNet);
+fprintf('Creating %d networks ... \n\n',S.nbNet);
 for net = 1:S.nbNet
 
     %% Tuning Curve
@@ -177,7 +184,7 @@ for net = 1:S.nbNet
 	%% Stimuli and Bias
 
 	%Creating inputs
- 	[ S.urg{net},S.stim{net},S.SG{net}] = ExtInputs(S,Stim);
+ 	[ S.urg{net},S.stim{net},S.SG{net},S.idxStim(:,net)] = ExtInputs(S,Stim);
 end
 
 
@@ -185,70 +192,51 @@ end
 	
  
  if paralComp
-     fprintf('Simulation in parallel...\n\n')
+     fprintf('Simulation in parallel ...\n\n')
      % Preventing outputs
      S.plotting = 0;   
      S.printDec = 0;   
      
-     parpool(nbWorkers) %open pools
+     nbWorkers = min(nbWorkers,S.nbNet);
+     
+     parpool(nbWorkers);  %open pools
      parfor net = 1:S.nbNet
 
-       fprintf('\nSimulating %d trials for Network %d ...\n',S.nbEx,net)  
-          [PMD{net},M1{net},commit(net,:)] = trialLoop(S,net);
+        fprintf('\nSimulating %d trials for Network %d ...\n',S.nbEx,net)  
+        [PMD(:,net),M1(:,net),commit(:,net)] = trialLoop(S,net);
 
      end
-    delete(gcp) %close pools
+     delete(gcp) %close pools
     
  else
      fprintf('Simulation ...\n\n')
      for net = 1:S.nbNet
         
       fprintf('\nSimulating %d trials for Network %d ...\n',S.nbEx,net)  
-          [PMD{net},M1{net},commit(net,:)] = trialLoop(S,net);
+          [PMD(:,net),M1(:,net),commit(:,net)] = trialLoop(S,net);
 
      end
      
  end
-     
+ 
+commit     = (abs(commit)-S.onset).*sign(commit);   %Commit after stim onset 
+ 
+Dat.PMD    = PMD;
+Dat.M1     =  M1;
+Dat.commit = commit;
 
-% 	%Saving values
-% % 	    Dat.PMD{net}    = PMD(S.pref,:);
-% % 	    Dat.M1{net,trial}     =  M1(S.pref,:);
-% % 	    Dat.commit(net,trial) = commit;
-% 	end
-% end
+FR = pcaFormat(nbins,startBin,S.aftcmt,Dat,S,Stim);
 
+%% Aligning trials with respect to commitment
+%FR = pcaFormat(nbins,startBin,S.aftcmt,Dat,S) 	    
+	    
  
 fprintf('\nTotal time taken in seconds : %f \n',toc)
 
 
-%PCA
-% [Up Sp Vp] = pca(M1(pref,:));   %Was pca2 before 
-% [Un Sn Vn] = pca(M1(npref,:));  %Was pca2 before 
-% figure;
-% h = plot3(Vp(:,1),Vp(:,2),Vp(:,3),'Color',[0 128 0]./255);
-% set(h,'linewidth',8);
-% hold on;
-% h = plot3(Vn(:,1),Vn(:,2),Vn(:,3),'Color',[128 0 0]./255);
-% set(h,'linewidth',8);
-% set(gca,'FontSize',24);
-% xlabel('PCA1');
-% ylabel('PCA2');
-% zlabel('PCA3');
-% 
-% figure;
-% [Up Sp Vp] = pca2(M2(pref,:));
-% [Un Sn Vn] = pca2(M2(npref,:));
-% h = plot3(Vp(:,1),Vp(:,2),Vp(:,3),'Color',[128 255 128]./255);
-% set(h,'linewidth',8);
-% hold on;
-% h = plot3(Vn(:,1),Vn(:,2),Vn(:,3),'Color',[255 128 128]./255);
-% set(h,'linewidth',8);
-% set(gca,'FontSize',24);
-
-
-
-
+if saveFR
+save([pwd '/FR.mat'],'FR')
+end
 
 
 

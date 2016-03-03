@@ -1,4 +1,4 @@
-function [ urg,stim,SG ] = ExtInputs(S,Stim)
+function [ urg,stim,SG,idx ] = ExtInputs(S,Stim)
 %% External inputs
     %All the inputs not coming from the neural activity
 
@@ -12,9 +12,16 @@ function [ urg,stim,SG ] = ExtInputs(S,Stim)
 if ~c
    nstim   = Stim.nbStimR;               %Number of stim of chosen c
    stimRaw = Stim.stimRawR; %Trials for condition c
-else   
+elseif length(c) ==1   
    nstim   = Stim.nbStim{c};               %Number of stim of chosen c
    stimRaw = Stim.stimRawR(Stim.idx{c},:); %Trials for condition c
+elseif length(c) > 1
+    nstim   = Stim.nbStim{c(1)};
+    stimRaw = Stim.stimRawR(Stim.idx{c(1)},:); 
+    for cc = c(2:end)
+        nstim   = nstim+Stim.nbStim{cc};
+        stimRaw = vertcat(stimRaw,Stim.stimRawR(Stim.idx{cc},:));
+    end
 end
    
 %Logic matrix to expand stimuli wrt T
@@ -33,11 +40,13 @@ end
    
    stimAll = stimRaw*timeLogiMat;   %Stimuli from c expanded wrt T
    
+   
+%% IDX IS NOT THE IDX WITH RESPECT TO ALL STIM EXCEPT IF C = 0 (i.e. using all stim)  
 %Choosing examples
-   if ~ exRan
-	idx = exNum;
+   if ~exRan
+        idx = exNum;
    else
-   	idx = randi(nstim,[nbEx,1]); %Select nbEx random integer within nstim
+        idx = randi(nstim,[nbEx,1]); %Select nbEx random integer within nstim
    end
    stim = stimAll(idx,:);
    

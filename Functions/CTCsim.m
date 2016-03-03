@@ -14,11 +14,14 @@ commit = 0; %If commit stays 0, it means the network didn't cross tresh
 for s=1:T
         t = (s-1)*dt; % Current time in ms
 
+    PMD_A  = fct(Y1,steep(1));  % PMD activity after transfer function
+    M1_A   = fct(Y2,steep(2));  % M1  activity after transfer function
+    
     %activation from PMd1 to M1
-    s_wY1 = S.W{net}{1,2}*fct(Y1,steep(1));
+    s_wY1 = S.W{net}{1,2}*PMD_A;
 
     %activation from M1 to PMd
-    s_wY2 = S.W{net}{2,1}*fct(Y2,steep(2));
+    s_wY2 = S.W{net}{2,1}*M1_A ;
 
     %Unpacking W matrix into excitation and inhibition
     KE1 =  S.W{net}{1,1}; KE1(KE1<0) = 0;
@@ -28,12 +31,12 @@ for s=1:T
     KI2 = -S.W{net}{2,2}; KI2(KI2<0) = 0;
 
     %within-layer activation 1
-    s_KE1 = KE1*fct(Y1,steep(1));
-    s_KI1 = KI1*fct(Y1,steep(1));
+    s_KE1 = KE1*PMD_A;
+    s_KI1 = KI1*PMD_A;
 
     %within-layer activation 2
-    s_KE2 = KE2*fct(Y2,steep(2));
-    s_KI2 = KI2*fct(Y2,steep(2));
+    s_KE2 = KE2*M1_A;
+    s_KI2 = KI2*M1_A ;
 
     %% Calculating activity output and derivatives
     Y1 = max(X1-Tau,0);
@@ -54,7 +57,9 @@ for s=1:T
     dX1 = -(alpha.*X1) + (beta - X1).*gamma.*E1 - X1.*s_KI1;
     dX2 = -(alpha.*X2) + (beta - X2).*gamma.*E2 - X2.*s_KI2;
 
-% if s == 300; s; end %Debug trigger
+if t == 500;
+    s; 
+end %Debug trigger
     
     dX1 = dX1 .* tau;
     dX2 = dX2 .* tau;
@@ -66,10 +71,12 @@ for s=1:T
     A2(:,s) = X2;
 
 %% Treshold
-    diffPop = mean(X1(pref)) - mean(X2(npref));
+    % Used to use mean, but mean is about 8x slower than max and
+    % qualitatively results are identical.
+    diffPop = max(X1(pref)) - max(X2(npref));
 
     if abs(diffPop) >= tresh && ~commit
-	commit = sign(diffPop)*t; %Sign indicate direction	
+	commit = sign(diffPop)*(t); %Sign indicate direction	
     end
 
     %To let run the simulation a bit longer.

@@ -12,7 +12,7 @@ function [PMD,M1,commit]  = trialLoop(S,net)
         if S.printDec
             
             %Number of tokens (15 is the max)
-            nbTokens =  floor((abs(commit(trial))-S.onset)/50)+1;
+            nbTokens =  floor((abs(commit(trial))-S.onset)/S.jumpT)+1;
             if nbTokens > 15; nbTokens = 15; end
         
             fprintf('      Trial :   %d of %d    ~    Decision :   ',trial,S.nbEx)
@@ -33,7 +33,7 @@ function [PMD,M1,commit]  = trialLoop(S,net)
         end
         
         %Only outputting values of prefered neurons
-        PMD{trial} = PMD_(pref,1:min(abs(commit(trial))+S.aftcmt,S.T));
-        M1{trial}  =  M1_(pref,1:min(abs(commit(trial))+S.aftcmt,S.T));      
+        PMD{trial} = PMD_(pref,S.onset-10:min(abs(commit(trial))+S.aftcmt,S.T));
+        M1{trial}  =  M1_(pref,S.onset-10:min(abs(commit(trial))+S.aftcmt,S.T));      
     end
 
