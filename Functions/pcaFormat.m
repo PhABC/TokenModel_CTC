@@ -1,4 +1,4 @@
-function FR = pcaFormat(nbins,start,stop,Dat,S,Stim)
+function FR = pcaFormat(nbins,start,stop,Dat,S,Stim,idxStim)
 % Function that will put the data into fomart compabtible 
 % with PCA algorithm. 
 %
@@ -27,13 +27,13 @@ for f = 1:length(fn)-1
     
     goodTr = Dat.(fn{f})(logi);     % Good trials
     
-    Dattmp.(fn{f}) = cell(S.nbEx,S.nbNet);
+    Dattmp.(fn{f}) = cell(S.nbEx,dimF(2));
     ntT = 1;    %Total number of trial incrementation
     
-    FR.(fn{f}) = zeros(dimC(1)*S.nbNet,nbins,length(Stim.logIdx));
+    FR.(fn{f}) = zeros(dimC(1)*dimF(2),nbins,length(Stim.logIdx));
 
 %% Bin and Alignment 
-    for net = 1:S.nbNet
+    for net = 1:dimF(2)
         
         nt = sum(logi(:,net)); %nb of correct trial
         % Removing incorrect trials 
@@ -53,12 +53,12 @@ for f = 1:length(fn)-1
 %% Trial classification
     
     if ~S.c | (length(S.c) > 1)
-        DatC = classtrial(Dattmp.(fn{f}),Stim,S.idxStim);
+        DatC = classtrial(Dattmp.(fn{f}),Stim,idxStim);
           for c = 1:length(Stim.logIdx)
               maxTrial = max(cellfun('length',DatC(c,:))); % Network with max trial
-              DatCtmp  = cell(maxTrial,S.nbNet);            
+              DatCtmp  = cell(maxTrial,dimF(2));            
               
-              for net = 1:S.nbNet
+              for net = 1:dimF(2)
                   lgt = length(DatC{c,net});
                   DatCtmp(1:lgt,net) = DatC{c,net};
               end
