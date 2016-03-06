@@ -3,7 +3,7 @@
 
 %% Stimuli
 subplot(4,1,1); 
-plot(sign(S.stimW)*S.stim{net}(trial,:),'x','linewidth',1); hold on;
+plot(sign(S.stimW)*stimTrial(trial,:),'x','linewidth',1); hold on;
 plot(zeros(S.T,1),'m');                      
 plot(S.onset,-16:001:16,'xk'); hold off
 

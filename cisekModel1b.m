@@ -18,8 +18,10 @@ tic
 
 % Seed allow you to replay the same trial. Comment out 'seed' if you want to
 % reuse the previous trial. 
-seed = rng;       %Saving seed (Comment out to reuse previous seed)
+seed   = rng;     %Saving seed (Comment out to reuse previous seed)
 rng(seed)         %Loading seed
+
+saveFR = 0;   % Will save FR in current dir if == 1
 
 %% Simulation parameters
 S.N      = 200;   % Nb of neurons per population
@@ -36,7 +38,6 @@ S.tau    = 0.005; % Time constant
 
 S.paralComp = 0;   % run code in parallel if == 1
 nbWorkers   = 2;   % Number of workers for parallel computing
-saveFR      = 1;   % Will save FR in current dir if == 1
 S.plotting  = 1;   % 1 = plotting ~ 0 = no plots
 S.printDec  = 1;   % Print decision of network
 
