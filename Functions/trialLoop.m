@@ -1,9 +1,10 @@
-function [FR,commit]  = trialLoop(S,net,hnorm,W,urg,stimTrial,SG,Stim,idxStim)
+function [FR,commit]  = trialLoop(S,net,hnorm,W,urg,stimTrial,SG,Stim,idxStim,Gtime)
 
-Dat.commit  = zeros(S.nbEx,1);
-Dat.PMD = cell(S.nbEx,1);
+Dat.PMd = cell(S.nbEx,1);
 Dat.M1  = cell(S.nbEx,1);
 
+commit   = zeros(S.nbEx,1);
+nbTokens = zeros(S.nbEx,1);
 
 tic
 
@@ -11,22 +12,20 @@ for trial = 1:S.nbEx
 
     % stimuli preferences are also assigned in the following fct
     [ St, V, U, pref, npref ] = TrialInput(S,trial,hnorm,SG,stimTrial,urg);
-    [ PMD_,M1_,commit(trial)] = CTCsim(S,W,St,V,U,pref,npref); 
-    
-    
+    [ PMd_,M1_,commit(trial)] = CTCsim(S,W,St,V,U,pref,npref);     
     
     if S.printDec 
 
         %Number of tokens (15 is the max)
-        nbTokens =  floor((abs(commit(trial))-S.onset)/S.jumpT)+1;
-        if nbTokens > 15; nbTokens = 15; end
+        nbTokens(trial) =  floor((abs(commit(trial))-S.onset)/S.jumpT)+1;
+        if nbTokens(trial) > 15; nbTokens(trial) = 15; end
 
         fprintf('      Trial :   %d of %d    ~    Decision :   ',trial,S.nbEx)
 
         if commit(trial) > 0
-            fprintf('Right (tokens: %d)\n', nbTokens);
+            fprintf('Correct   (tokens: %d)\n', nbTokens(trial));
         elseif commit(trial) < 0
-            fprintf('Left  (tokens: %d)\n', nbTokens);
+            fprintf('Incorrect (tokens: %d)\n', nbTokens(trial));
         else 
             fprintf('--- \n')
         end
@@ -38,26 +37,40 @@ for trial = 1:S.nbEx
        FigureCTC
     end
     
-    if S.paralComp && ~mod(trial,S.nbEx/4)
-        fprintf('Net #%d  ~  Trial :   %d of %d   ~  Time : %f\n', net, trial, S.nbEx, toc);
+    if S.nbEx > 100
+    	if ~mod(trial,S.nbEx/10)
+	fprintf('\n       -------------------------------------------------------\n')
+        fprintf('             Net #%d                Time : %s\n', net, sec2hms(toc(Gtime)));
+	fprintf('       -------------------------------------------------------\n\n')
+   	    end
     end
-    
 
-    %Only outputting values of prefered neurons
-    Dat.PMD{trial} = PMD_(pref,S.onset-10:min(abs(commit(trial))+S.aftcmt,S.T));
-    Dat.M1{trial}  =  M1_(pref,S.onset-10:min(abs(commit(trial))+S.aftcmt,S.T)); 
-    
+    if S.record == 1
+        %Only outputting values of prefered neurons
+        Dat.PMd{trial} = PMd_(logical(pref+npref), S.stRec: ...
+                              min(abs(commit(trial))+S.aftcmt,S.T));
+        Dat.M1{trial}  =  M1_(logical(pref+npref), S.stRec: ...
+                              min(abs(commit(trial))+S.aftcmt,S.T)); 
+    elseif S.record == 2
+       %Outputting values of all neurons
+       Dat.PMd{trial} = PMd_(:,S.stRec:min(abs(commit(trial))+S.aftcmt,S.T));
+       Dat.M1{trial}  =  M1_(:,S.stRec:min(abs(commit(trial))+S.aftcmt,S.T));
+    end
+
 end
 
-Dat.commit = commit;
+Dat.commit   = commit  ;
+Dat.nbTokens = nbTokens;
 
-FR = pcaFormat(S.nbins,S.startBin,S.aftcmt,Dat,S,Stim,idxStim);
-
+if S.pcaForm == 1
+    FR = pcaFormat(S.nbins,S.startBin,S.aftcmt,Dat,Stim,idxStim);
+else
+    FR = Dat;
+end
 
 
 function [A1,A2,commit] = CTCsim(S,W,St,V,U,pref,npref) %% Simulation
 %% Running the simulation
-
 
 %Unpacking fields 
 N = S.N; T = S.T; dt = S.dt; tau = S.tau; alpha = S.alpha; beta = S.beta;
@@ -73,11 +86,11 @@ commit = 0; %If commit stays 0, it means the network didn't cross tresh
 for s=1:T
         t = (s-1)*dt; % Current time in ms
 
-    PMD_A  = fct(Y1,steep(1));  % PMD activity after transfer function
+    PMd_A  = fct(Y1,steep(1));  % PMd activity after transfer function
     M1_A   = fct(Y2,steep(2));  % M1  activity after transfer function
     
     %activation from PMd1 to M1
-    s_wY1 = W{1,2}*PMD_A;
+    s_wY1 = W{1,2}*PMd_A;
 
     %activation from M1 to PMd
     s_wY2 = W{2,1}*M1_A ;
@@ -90,8 +103,8 @@ for s=1:T
     KI2 = -W{2,2}; KI2(KI2<0) = 0;
 
     %within-layer activation 1
-    s_KE1 = KE1*PMD_A;
-    s_KI1 = KI1*PMD_A;
+    s_KE1 = KE1*PMd_A;
+    s_KI1 = KI1*PMd_A;
 
     %within-layer activation 2
     s_KE2 = KE2*M1_A;
@@ -135,7 +148,7 @@ end %Debug trigger
     diffPop = max(X1(pref)) - max(X2(npref));
 
     if abs(diffPop) >= tresh && ~commit
-	commit = sign(diffPop)*(t); %Sign indicate direction	
+	commit = sign(sign(S.stimW)*diffPop)*(t); %Sign indicate direction	
     end
 
     %To let run the simulation a bit longer.
