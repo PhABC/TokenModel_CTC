@@ -17,11 +17,11 @@ ylim([-16,16])
 %% Prefered direction VS non prefered
 subplot(4,1,2)
 if ~commit(trial)
-    plot(mean(PMD_(npref,:)),'r','linewidth',2); hold on
-    plot(mean(PMD_(pref ,:)),'g','linewidth',2);
+    plot(mean(PMd_(npref,:)),'r','linewidth',2); hold on
+    plot(mean(PMd_(pref ,:)),'g','linewidth',2);
 else
-    plot(mean(PMD_(npref,1:min(abs(commit(trial))+S.aftcmt/S.dt,S.T))),'r','linewidth',2); hold on
-    plot(mean(PMD_(pref, 1:min(abs(commit(trial))+S.aftcmt/S.dt,S.T))),'g','linewidth',2);
+    plot(mean(PMd_(npref,1:min(abs(commit(trial))+S.aftcmt/S.dt,S.T))),'r','linewidth',2); hold on
+    plot(mean(PMd_(pref, 1:min(abs(commit(trial))+S.aftcmt/S.dt,S.T))),'g','linewidth',2);
 end
 plot(S.onset,0:001:S.beta,'xk'); hold off
 
@@ -34,12 +34,12 @@ xlim([0,S.T])
 ylim([0,101])
 
 
-%% Population PMD activity
+%% Population PMd activity
 subplot(4,1,3)
-imagesc(circshift(PMD_,ceil(S.N/4),1)); hold on
+imagesc(circshift(PMd_,ceil(S.N/4),1)); hold on
 plot(S.onset,0:001:S.N,'xk'); hold off
 
-title('PMD population  activity');
+title('PMd population  activity');
 xlabel('time (ms)');
 ylabel('Neurons');
 xlim([0,S.T])
