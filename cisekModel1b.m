@@ -1,4 +1,4 @@
-%% SIMPLIFIED VERSION WITH ONLY a 2-layer PMD
+%% SIMPLIFIED VERSION WITH ONLY a 2-layer PMd
     %Each region is refered as R1 and R2.
 
 %% Note : 
@@ -7,10 +7,12 @@
 
 
 %% To do :
-% ++++ SD for inhibition not implemented yet
+% ++++ Optimal parallel computing
+% ++++ Classification based on commitment time
+% ++++ Binning for PCA without smeering off time relation
 
 %% Global commands
-% close all;
+%close all;
 clc
 warning off all;
 clearvars -except seed
@@ -21,25 +23,33 @@ tic
 seed   = rng;     %Saving seed (Comment out to reuse previous seed)
 rng(seed)         %Loading seed
 
-saveFR = 0;   % Will save FR in current dir if == 1
+saveData = 0;   % Will save FR in current dir if == 1
 
 %% Simulation parameters
-S.N      = 200;   % Nb of neurons per population
+S.N      = 216;   % Nb of neurons per population
 S.T      = 2000;  % Simulation time in ms
 S.tresh  = 35;	  % Difference between the 2 populations for commitment time
 
-S.nbEx   = 100;    % Number of stimuli examples to present
-S.nbNet  = 2;	  % Number of different networks (neurons with different parameters)
-    
-S.onset  = 120;   % onset of trial in ms
-S.aftcmt = 100;   % Stop simulation after X ms
-S.dt     = 1;     % Time step in ms
-S.tau    = 0.005; % Time constant
 
-S.paralComp = 0;   % run code in parallel if == 1
-nbWorkers   = 2;   % Number of workers for parallel computing
-S.plotting  = 1;   % 1 = plotting ~ 0 = no plots
-S.printDec  = 1;   % Print decision of network
+S.nbEx   = 100;  % Number of stimuli examples to present
+S.nbNet  = 1;	 % Number of different networks (neurons with different parameters
+S.record = 1;	 % if == 1, only involved neurons will be recorded | if == 2, all neurons will be recorded
+
+S.onset  = 200; % onset of trial in ms S.aftcmt = 100; % Stop simulation after X ms S.dt = 1; % Time step in ms S.tau = 0.005; % Time constant
+S.aftcmt = 50;
+S.stRec  = 50;  % Time to start recording at. Skipping the first ms of instability in the simulation
+S.dt     = 1;
+S.tau    = 0.005; 
+
+S.paralComp = 0;    % run code in parallel if == 1
+nbWorkers   = 2;    % Number of workers for parallel computing
+S.pcaForm   = 1;    % Transform data into PCA compabtible format
+S.plotting  = 1;    % 1 = plotting ~ 0 = no plots
+S.printDec  = 1;    % Print decision of network
+
+pcaPlotStSpc = 1;   % Will plot neural state space if True
+pcaPlotComps = 1:6; % Components to plot in 3d state space
+pcaPlotConds = 1:6; % Conditions to plot in 3d state space
 
 %% Activation function parameters
 %   The steepness of the sigmoid is determined by the parameter 'steep'.
@@ -69,27 +79,27 @@ S.steep(2) = 0.04; %Steepness of activation function for population 2
 % Weight within regions
 
     %R1 kernel
-    S.Ww(1,1)   = .5;   % Amplitude of weight R1 -> R1 
+    S.Ww(1,1)   = .7;  % Amplitude of weight R1 -> R1 
     S.Sunk(1,1) = .6;   % Proportion of sunken gaussian. 1 = all inhibitory.
     S.Wsd(1,1)  = .1;   % 0 < sd < 1 ~ Standart deviation
 
     %R2 kernel
-    S.Ww(2,2)   = .15;   
+    S.Ww(2,2)   = .2;   
     S.Sunk(2,2) = .6; 
     S.Wsd(2,2)  = .1;   
     
 %% Input parameters
 
-% Stimuli parameters
-S.c      = [2];   % Classes : 0 = all       | 1 = easy  | 2 = misleading 
-                    %           3 = ambiguous | 4 = other   
+% Stimuli parameters (defined apriori, WRT stimuli onset, not commit)
+S.c      = [1,2,3]; % Classes : 0 = all       | 1 = easy  | 2 = misleading 
+                    %       3 = ambiguous | 4 = other   
                     % S.c also accepts vector ( e.g [1.2] )
                     
-S.exRan  = 1;	 % 0 = specified trial ~ 1 = random trial ;
-S.exNum  = 330;  % Specifyin trial number if non random
+S.exRan  = 1;	  % 0 = specified trial ~ 1 = random trial ;
+S.exNum  = 16000; % Specifyin trial number if non random
 
-S.jumpT  = 50;   % interval between each jumps in ms (verify if work with T)
-S.stimW  = 4;    % Amplitude of stimuli ( 0< flip stimuli )
+S.jumpT  = 50;    % interval between each jumps in ms (verify if work with T)
+S.stimW  = 4.3;    % Amplitude of stimuli ( 0< flip stimuli )
 
 
 % Bias parameters
@@ -104,10 +114,10 @@ S.sG     = 0.1;  % Slow gaussian noise strength (shared noise)
 S.Urand  = 1;	 % 1 = random slope every trial ~ 0 = same slope every trial
 S.Utype  = 1;	 % 1 = additive urgency signal ~ 2 = multiplicative urgency signal
 
-S.Uori   = 0;    % origin point for the linear function ~ put 
-S.Uslop  = 3;    % Slope of the linear urgency function 
-S.Uw     = 0.015;    % Amplitude of urgency signal [ consider Utype for this value ] 
-S.urgmax = 30;
+S.Uori   = 1;     % origin point for the linear function ~ put 
+S.Uslop  = 1.5;   % Slope of the linear urgency function 
+S.Uw     = 0.025; % Amplitude of urgency signal [ consider Utype for this value ] 
+S.urgmax = 35;
 
 %% Model parameters
 S.alpha = 15;    %  Decay factor 
@@ -116,7 +126,7 @@ S.gamma = 1;     %  Excitation ratio
 S.Tau   = 0;     %  
 
 %% Data format parameters
-S.startBin = 300;	 % Time before commitment 
+S.startBin = 600;	 % Time before commitment 
 S.nbins    = 80;                        
 % Time after  commitment is the end of trial
 
@@ -135,8 +145,9 @@ S.jumpT = floor(S.jumpT/S.dt);
 
 FR     =  cell(S.nbNet,1);
 % M1     =  cell(S.nbEx,S.nbNet);
-% PMD    =  cell(S.nbEx,S.nbNet);
+% PMd    =  cell(S.nbEx,S.nbNet);
 commit = zeros(S.nbEx,S.nbNet);
+
 
 %% Stimuli creation
 %Creating and saving or loading raw stimuli
@@ -168,16 +179,16 @@ end
      if isempty(gcp('nocreate'))
         parpool(nbWorkers);  %open pools
      end
-     
+     Gtime = tic;
      parfor net = 1:S.nbNet
          
          % Creating networks
-         %      Creating new networks at every loop with basic
+         %       Creating new networks at every loop with basic
          %      parameters changing (W,tuning, etc.)
          [hnorm,W,urg,stimTrial,SG,idxStim] =  connScrpt(N,Wsd,Ww,Sunk,S,Stim)
 
     %% Simulation
-         fprintf('\nSimulating %d trials for Network %d ...\n',S.nbEx,net)  
+         fprintf('Simulating %d trials for Network %d ...\n',S.nbEx,net)  
          [FR{net},commit(:,net)] = trialLoop(S,net,hnorm,W,urg,stimTrial,SG,Stim,idxStim);
 
      end
@@ -185,36 +196,46 @@ end
     
  else
      fprintf('Simulation ...\n\n')
-     for net = 1:S.nbNet
+    Gtime = tic;
+    for net = 1:S.nbNet
          
          % Creating networks
          %      Creating new networks at every loop with basic
          %      parameters changing (W,tuning, etc.)
-         [hnorm,W,urg,stimTrial,SG,idxStim] =  connScrpt(N,Wsd,Ww,Sunk,S,Stim);
+         [hnorm,W,urg,stimTrial,SG,idxStim(:,net)] =  connScrpt(N,Wsd,Ww,Sunk,S,Stim);
          
-         fprintf('\nSimulating %d trials for Network %d ...\n',S.nbEx,net)  
-         [FR{net},commit(:,net)] = trialLoop(S,net,hnorm,W,urg,stimTrial,SG,Stim,idxStim);
+         fprintf('Simulating %d trials for Network %d of %d ...\n',S.nbEx,net,S.nbNet)  	
+         [FR{net},commit(:,net)] = trialLoop(S,net,hnorm,W,urg,stimTrial,SG,Stim,idxStim(:,net),Gtime);
 
-     end
+    end
      
  end
  
 commit     = (abs(commit)-S.onset).*sign(commit);   %Commit after stim onset 
  
-
-%% PCA Formatting
-fprintf('\nPutting data in PCA compabtible format'); 
-% FR = pcaFormat(nbins,startBin,S.aftcmt,Dat,S,Stim);
-
- 	    
-	    
- 
-
-fprintf('\nTotal time taken in seconds : %f \n',toc)
+%% PCA
 
 
-if saveFR
-save([pwd '/FR.mat'],'FR')
+if pcaPlotStSpc
+    
+    
+    stateSpace(FR,pcaPlotComps,pcaPlotConds);
+
+end
+
+
+fprintf('\nTotal time taken : %s \n',sec2hms(toc(Gtime)))
+
+%% Saving information
+
+
+if saveData
+	Info = S;
+	Info.idxStim = idxStim;
+
+	save([pwd 'Data/FR.mat']    ,'FR')
+	save([pwd,'Data/commit.mat'],'commit')
+	save([pwd,'Data/Info.mat']  ,'Info')
 end
 
 
