@@ -23,24 +23,26 @@ for bin = onset:jumpT:T
 end
 
 %Stimuli index e
-
-if ~c
-    nstim   = Stim.nbStimR;       % Number of stim of chosen c
-    
-   if ~exRan
-        idx = exNum;
-   else
-        idx = randi(nstim,[nbEx,1]); %Select nbEx random integer within nstim
-   end
-   
+if ~S.exRan
+	idx = ones(S.nbEx,1)*S.exNum;
 else
-    
-    stimList = vertcat(Stim.idx{[c]}); 
-    perms    = randperm(length(stimList));
-    idx      = stimList(perms(1:nbEx));
-
+	if ~c
+    		nstim   = Stim.nbStimR;       % Number of stim of chosen 
+    		idx = randi(nstim,[nbEx,1]); %Select nbEx random integer within nstim
+	else    
+    		lenC = cellfun('length',Stim.idx(S.c));
+    		repD = ceil( ones(1,length(lenC))./lenC * max(lenC));    
+    	
+    		stUnpck  = Stim.idx(S.c);
+    		for i = 1:length(stUnpck)
+			stUnpck{i} = repmat(stUnpck{i},repD(i),1);
+    		end
+	  				
+    		stimList = vertcat(stUnpck{:}); 
+    		perms    = randi(length(stimList),nbEx,1);
+    		idx      = stimList(perms);
+	end
 end
-   
 
    
 stimAll = Stim.stimRawR*timeLogiMat;   %Stimuli from c expanded wrt T
@@ -61,8 +63,8 @@ stim = stimAll(idx,:);
 
 %Creating gauss distribution   
 if S.Urand
-   urg  = urg  + urg .* abs(repmat(randn(nbEx,1)*.5,1,T)) + ...  % Random slopes
-          Uori + repmat(0.1*randn(nbEx,1),1,T);      % Random origins
+   urg  = urg  + urg .* abs(repmat(randn(nbEx,1)*.1,1,T)) + ...  % Random slopes
+          Uori + repmat(0.1*randn(nbEx,1),1,T);    	         % Random origins
 end
 %    urg  = urg/max(urg(:,end));                            % Normalized
    urg(urg<0) = 0;                                        % Del values < 0

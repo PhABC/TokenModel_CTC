@@ -28,12 +28,12 @@ Stim.stimRawR = Stim.stimRaw(Stim.stimRaw(:,end)>0,:);
 
 %% Calculating the probability of success
 nbRightR   = nbRight(Stim.stimRaw(:,end)>0,:);
-probR      = probRight(nbRightR);             %Probability if answer right (>0)
+Stim.probR      = probRight(nbRightR);             %Probability if answer right (>0)
 
-%% Stimulis classification
+%% Stimulis classification Definitions
 %Defining the rules for each category
     % First  row is 'bigger than' conditions
-    % Third  row is 'smaller  than' conditions
+    % Second  row is 'smaller  than' conditions
     %
     % No 'Equal to' condition because of numerical instability. Would need
     %       add an error margin of epsilon if ever desired.
@@ -53,18 +53,18 @@ Stim.def{2}  = [ 0,0,  0,  0,0,0,0,0,0,0,0,0,0,0, 0.5 ; ...
 Stim.def{3}  = [ 0,  0.4, 0.38 ,0, 0.55, 0, 0.55, 0,0,0,0,0.4,0,0, 0.5  ; ...
                  0,  0.6, 0.65, 0, 0.66, 0, 0.66, 0,0,0,0,0.6,0,0,  0  ];
 
-%Classifying                
+%% Classifying                
 nonclass = ones(Stim.nbStimR ,1);
 
 for c = 1:length(Stim.def)       %Skipping category 'Others'
     %Conditions for each categories
     B = repmat(Stim.def{c}(1,:),Stim.nbStimR,1); %Bigger than matrix
-    B(:,~any(B)) = probR(:,~any(B));               %Take real value when no conditions
+    B(:,~any(B)) = Stim.probR(:,~any(B));               %Take real value when no conditions
     
     S = repmat(Stim.def{c}(2,:),Stim.nbStimR,1); %Smaller than matrix
-    S(:,~any(S)) = probR(:,~any(S));               %Take real value when no conditions
+    S(:,~any(S)) = Stim.probR(:,~any(S));               %Take real value when no conditions
     
-    logMat         = probR >= B & probR <= S;      %Apply conditions
+    logMat         = Stim.probR >= B & Stim.probR <= S;      %Apply conditions
     Stim.logIdx{c} = all(logMat,2);                %idx with logic array
     Stim.idx{c}    = find(Stim.logIdx{c} == 1);    %idx with trial nb     
     
