@@ -99,7 +99,7 @@ S.exRan = 1;      % 0 = specified trial ~ 1 = random trial ;
 S.exNum = 800;    % Specifyin trial number if non random
 
 S.jumpT = 50;     % interval between each jumps in ms (verify if work with T)
-S.stimW = 7;      % Amplitude of stimuli ( 0< flip stimuli )
+S.stimW = 5;      % Amplitude of stimuli ( 0< flip stimuli )
 
 
 % Bias parameters
@@ -224,9 +224,9 @@ if saveData
 	Info = S;
 	Info.idxStim = idxStim;
 
-	save([pwd 'Data/FR.mat']    ,'FR')
-	save([pwd,'Data/commit.mat'],'commit')
-	save([pwd,'Data/Info.mat']  ,'Info')
+	save([pwd '/Data/FR.mat']    ,'FR')
+	save([pwd,'/Data/commit.mat'],'commit')
+	save([pwd,'/Data/Info.mat']  ,'Info')
 end
 
 %% Summary information
