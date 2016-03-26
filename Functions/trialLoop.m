@@ -33,7 +33,7 @@ for trial = 1:S.nbEx
     end
 
     %Figures
-    if S.plotting 
+    if S.plotting || trial == 1
        FigureCTC
     end
     
