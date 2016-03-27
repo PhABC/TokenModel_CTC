@@ -145,7 +145,7 @@ end %Debug trigger
 %% Treshold
     % Used to use mean, but mean is about 8x slower than max and
     % qualitatively results are identical.
-    diffPop = max(X1(pref)) - max(X2(npref));
+    diffPop = max(X1(pref)) - max(X1(npref));
 
     if abs(diffPop) >= tresh && ~commit
 	commit = sign(sign(S.stimW)*diffPop)*(t); %Sign indicate direction	
