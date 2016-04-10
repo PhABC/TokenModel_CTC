@@ -15,11 +15,11 @@ i = 1;
 for bin = onset:jumpT:T
    if i == 1    
      timeStimMat(i,bin:bin+jumpT-1) = linspace(0,1,jumpT);
-   elseif i<15 && i>1
+   elseif i<=15 && i>1
      timeStimMat(i,bin:bin+jumpT-1) = linspace(0,1,jumpT);
      timeStimMat(i-1,bin:bin+jumpT-1) = linspace(1,0,jumpT);
-   else
-       timeStimMat(i,bin:end) = 1;
+   else  
+     timeStimMat(15,bin:end) = 1;
      break;
    end
    i = i+1;
