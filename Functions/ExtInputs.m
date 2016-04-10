@@ -1,12 +1,12 @@
-function [ urg,stim,SG,idx ] = ExtInputs(S,Stim)
+function [ Uall,stim,SG,idx,S ] = ExtInputs(S,Stim)
 %% External inputs
     %All the inputs not coming from the neural activity
 
 %% Stimuli
 %Unpacking fields
-T=S.T; dt=S.dt; nbEx=S.nbEx; c=S.c;jumpT=S.jumpT; 
+T=S.T; dt=S.dt; nbEx=S.nbEx; c=S.c;jumpT=S.jumpT; N = S.N;
 Uslop=S.Uslop; onset=S.onset; Uw=S.Uw; Uori = S.Uori;
-urgmax=S.urgmax; exRan=S.exRan; exNum=S.exNum;
+urgmax=S.urgmax;
 
 %Logic matrix to expand stimuli wrt T
 timeLogiMat = zeros(15,T);
@@ -56,17 +56,16 @@ stim = stimAll(idx,:);
 %Baseline urgency signal
    Uend = (T-onset)*Uslop;       %Last point of linear function wrt T
    urg  = zeros(nbEx,T);  
-   urg(:,onset:end) = repmat(linspace(0,Uend,T-onset+1),... 
+   urg(:,1:onset)   = Uori;
+   urg(:,onset:end) = repmat(linspace(Uori,Uend,T-onset+1),... 
                              [nbEx,1]);      % Urgency starts at stim onset
-%    urg  = urg/max(urg(:,end));                             % Normalized
-
 
 %Creating gauss distribution   
-if S.Urand
-   urg  = urg  + urg .* abs(repmat(randn(nbEx,1)*.1,1,T)) + ...  % Random slopes
-          Uori + repmat(0.1*randn(nbEx,1),1,T);    	         % Random origins
+if S.URtrial(1)
+   urg  = urg  + urg  .* repmat(S.URtrial(2)*randn(nbEx,1),1,T) + ...  % Random slopes
+          Uori + Uori .* repmat(S.URtrial(2)*randn(nbEx,1),1,T);    	             % Random origins
 end
-%    urg  = urg/max(urg(:,end));                            % Normalized
+
    urg(urg<0) = 0;                                        % Del values < 0
 
    urg = urg*Uw;
@@ -91,5 +90,38 @@ end
     for ex = 1:nbEx
         SG(ex,:) = smooth(SG(ex,:),100/dt);
     end
+
+%% Adding randomness to parameters
     
+% Activation function
+if S.RFsteep(1) ==1 
+    S.STEEP = randParam(S.Fsteep,S.RFsteep(2),S.N);
+else
+    S.STEEP = repmat(S.Fsteep,N,1);
 end
+
+if S.RFshift(1) ==1
+    S.SHIFT = randParam(S.Fshift,S.RFshift(2),S.N);
+else
+    S.SHIFT = repmat(S.Fshift,N,1);
+end
+
+% Urgency
+Uall.PMd = cell(S.nbEx,1);
+Uall.M1 = cell(S.nbEx,1);
+
+if S.URneur(1) == 1
+    
+   % PMd & M1 slopes factors
+   sl = randParam([1,1],S.URneur(2),N); 
+    
+    for t = 1:S.nbEx
+
+        % PMD & M1 slopes
+        Uall.PMd{t} = repmat(urg(t,:),N,1) .* repmat(sl(:,1),1,T);
+         Uall.M1{t} = repmat(urg(t,:),N,1) .* repmat(sl(:,2),1,T); 
+    end
+    
+end 
+
+

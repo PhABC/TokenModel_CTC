@@ -6,9 +6,10 @@ function stateSpace(X,comps,conds)
 Xfr = stackStruct(X);  % stackStruct is adapted to this FR format
 
 % Symetrise cells for left direction
+% X2fr = Xfr;
 X2fr = symCells(Xfr);
 X2fr = structfun( @(X) X(:,:,conds), X2fr, ...
-                  'UniformOutput', false);
+                   'UniformOutput', false);
 
 N = size(X2fr.PMd,1);
 T = size(X2fr.PMd,2);
@@ -21,13 +22,12 @@ end
 
 
 % Normalizing for max FR
-
 X2fr = structfun( @(X) sqrt(X),X2fr, ... 
                   'UniformOutput', false);
 
 fn = fieldnames(X2fr); 
 for f = 1:length(fn)
-    Xresh.(fn{f}) = reshape(X2fr.(fn{f}),N,T*C);
+    Xresh.(fn{f}) = reshape(X2fr.(fn{f})(:,1:75,:),N,(T-5)*C);
     [loads.(fn{f}),scores.(fn{f}),latent.(fn{f})] = pca(Xresh.(fn{f})'); 
 end
  
@@ -40,7 +40,7 @@ for f = 1:length(fn)
         for cond = conds
             a = a+1;
             build.(fn{f})(:,comp,a) =  sum( diag(loads.(fn{f})(:,comp))*...
-                                            X2fr.(fn{f})(:,:,cond) )';
+                                            X2fr.(fn{f})(:,1:75,cond) )';
         end
     end
 end
@@ -49,6 +49,7 @@ end
 %% Plotting
 
 color = [ 'b', 'b', 'r', 'r', 'g', 'g','y','y' ];
+% color = 'k';
 
 % Neural state space
 for f = 1:length(fn)
@@ -73,7 +74,7 @@ for f = 1:length(fn)
     figure; hold on;    
     for c = 1:6
         for cond = 1:a
-            subplot(3,2,c); hold on
+            subplot(2,3,c); hold on
             plot(build.(fn{f})(:,c,cond),'color', color(cond))
             
             title( [fn{f},' Component ', num2str(c), ' ~ R² = '...
@@ -91,7 +92,11 @@ function C = stackStruct(X)
 
 ncells = length(X);
 
-C  = X{1};
+if ~isstruct(X)
+    C = X{1};
+else
+    C = X;
+end
 fn = fieldnames(C); 
 
 for c = 2:ncells
@@ -116,7 +121,7 @@ for f = 1:length(fn)-3
         if mod(c,2) 
            X2.(fn{f})(:,:,c) = X.(fn{f})(:,:,(c-1)/2+1);
         else
-           X2.(fn{f})(:,:,c) = circshift(X.(fn{f})(:,:,(c-2)/2+1),C/2);
+           X2.(fn{f})(:,:,c) = circshift(X.(fn{f})(:,:,(c-2)/2+1),N/2);
            %X2.(fn{f})(:,:,c)  = X.(fn{f})(:,:,(c-2)/2+1);
         end
     end

@@ -22,4 +22,6 @@ function W = wMat(sd,Ww,sunkR,N)
        
     W = W-sunk + randn(size(W))*Ww*0.2;    
     W = W.*100/N;			%Normalize wrt 100 as parameters were found with 100 N
+    W(rand(N)>0.90) = 0;    %10% extra random sparsness
+    
 end

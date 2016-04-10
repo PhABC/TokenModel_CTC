@@ -1,6 +1,7 @@
 %% FigureCTC 
 % script for all the figures
 
+figure(99)
 %% Stimuli
 subplot(4,1,1); 
 plot(sign(S.stimW)*stimTrial(trial,:),'x','linewidth',1); hold on;
@@ -25,8 +26,8 @@ else
 end
 plot(S.onset,0:001:S.beta,'xk'); hold off
 
-set(gca,'Linewidth',3);
-set(gca,'FontSize',40);
+% set(gca,'Linewidth',3);
+% set(gca,'FontSize',12);
 title('Prefered direction VS non prefered');
 xlabel('time (ms)');
 ylabel('activation');

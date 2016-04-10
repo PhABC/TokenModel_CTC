@@ -1,4 +1,4 @@
-function [FR,commit]  = trialLoop(S,net,hnorm,W,urg,stimTrial,SG,Stim,idxStim,Gtime)
+function [FR,commit]  = trialLoop(S,net,hnorm,W,Uall,stimTrial,SG,Stim,idxStim,Gtime)
 
 Dat.PMd = cell(S.nbEx,1);
 Dat.M1  = cell(S.nbEx,1);
@@ -11,7 +11,7 @@ tic
 for trial = 1:S.nbEx
 
     % stimuli preferences are also assigned in the following fct
-    [ St, V, U, pref, npref ] = TrialInput(S,trial,hnorm,SG,stimTrial,urg);
+    [St,V,U,pref,npref]=TrialInput(S,trial,hnorm,SG,stimTrial,Uall);
     [ PMd_,M1_,commit(trial)] = CTCsim(S,W,St,V,U,pref,npref);     
     
     if S.printDec 
@@ -38,11 +38,11 @@ for trial = 1:S.nbEx
     end
     
     if S.nbEx > 100
-    	if ~mod(trial,S.nbEx/10)
-	fprintf('\n       -------------------------------------------------------\n')
-        fprintf('             Net #%d                Time : %s\n', net, sec2hms(toc(Gtime)));
-	fprintf('       -------------------------------------------------------\n\n')
-   	    end
+        if ~mod(trial,S.nbEx/10)
+            fprintf('\n       -------------------------------------------------------\n')
+            fprintf('             Net #%d                Time : %s\n', net, sec2hms(toc(Gtime)));
+            fprintf('       -------------------------------------------------------\n\n')
+         end
     end
 
     if S.record == 1
@@ -74,7 +74,7 @@ function [A1,A2,commit] = CTCsim(S,W,St,V,U,pref,npref) %% Simulation
 
 %Unpacking fields 
 N = S.N; T = S.T; dt = S.dt; tau = S.tau; alpha = S.alpha; beta = S.beta;
-gamma = S.gamma; Tau = S.Tau; Utype = S.Utype; steep = S.steep; tresh=S.tresh;
+gamma = S.gamma; Tau = S.Tau; Utype = S.Utype; tresh=S.tresh;
 
 % Initialization 
 Y1 = zeros(N,1); Y2 = zeros(N,1);
@@ -86,8 +86,8 @@ commit = 0; %If commit stays 0, it means the network didn't cross tresh
 for s=1:T
         t = (s-1)*dt; % Current time in ms
 
-    PMd_A  = fct(Y1,steep(1));  % PMd activity after transfer function
-    M1_A   = fct(Y2,steep(2));  % M1  activity after transfer function
+    PMd_A  = fct(Y1,S.STEEP(:,1),S.SHIFT(:,1));  % PMd activity after transfer function
+    M1_A   = fct(Y2,S.STEEP(:,2),S.SHIFT(:,2));  % M1  activity after transfer function
     
     %activation from PMd1 to M1
     s_wY1 = W{1,2}*PMd_A;
@@ -116,13 +116,13 @@ for s=1:T
 
     if Utype == 1 %additive urgency
         
-        E1 = s_wY2 + s_KE1 + V(:,s) + St(:,s) + U(:,s);
-        E2 = s_wY1 + s_KE2 + V(:,s) + U(:,s);
+        E1 = s_wY2 + s_KE1 + V(:,s) + St(:,s) + U.PMd(:,s);
+        E2 = s_wY1 + s_KE2 + V(:,s) + U.M1(:,s)  + St(:,s);
 
     elseif Utype == 2 %Multiplicative urgency
 
-        E1 = ( s_wY2 + s_KE1 + V(:,s) + St(:,s) ).*U(:,s);
-        E2 = ( s_wY1 + s_KE2 + V(:,s) ).*U(:,s);
+        E1 = ( s_wY2 + s_KE1 + St(:,s) ).*U.PMd(:,s)+ V(:,s) ;
+        E2 = ( s_wY1 + s_KE2 ).*U.M1(:,s) + V(:,s) ;
 
     end
     
@@ -130,7 +130,7 @@ for s=1:T
     dX2 = -(alpha.*X2) + (beta - X2).*gamma.*E2 - X2.*s_KI2;
 
 if t == 500;
-    s; 
+1;
 end %Debug trigger
     
     dX1 = dX1 .* tau;
@@ -145,10 +145,15 @@ end %Debug trigger
 %% Treshold
     % Used to use mean, but mean is about 8x slower than max and
     % qualitatively results are identical.
-    diffPop = max(X1(pref)) - max(X1(npref));
+    diffPop = mean(X1(pref)) - mean(X1(npref));
 
     if abs(diffPop) >= tresh && ~commit
-	commit = sign(sign(S.stimW)*diffPop)*(t); %Sign indicate direction	
+        
+%         downU = linspace(U(:,s),U(:,1), 100);
+%         U(:,s:s+99)   = downU; 
+%         U(:,s+100:end) = U(1,1); 
+        commit = sign(sign(S.stimW)*diffPop)*(t); %Sign indicate direction	
+    
     end
 
     %To let run the simulation a bit longer.

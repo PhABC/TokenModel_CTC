@@ -1,4 +1,4 @@
-function [hnorm,W,urg,stimTrial,SG,idxStim] =  connScrpt(N,Wsd,Ww,Sunk,S,Stim)
+function [hnorm,W] =  connScrpt(N,Wsd,Ww,Sunk)
 % Tuning curves (homogeneous)
 r0   = 0;       % Baseline      
 rmax = 0.01;    % Peak max
@@ -17,6 +17,3 @@ W{2,2}  = wMat(Wsd(2,2)*N, Ww(2,2),Sunk(2,2), N);
 %Weight matrix between regions
 W{1,2} = wMat(Wsd(1,2)*N, Ww(1,2), Sunk(1,2), N);
 W{2,1} = wMat(Wsd(2,1)*N, Ww(2,1), Sunk(2,1), N);
-% 
-%Stimuli and Bias
-[urg,stimTrial,SG,idxStim] = ExtInputs(S,Stim);
