@@ -8,15 +8,18 @@ T=S.T; dt=S.dt; nbEx=S.nbEx; c=S.c;jumpT=S.jumpT; N = S.N;
 Uslop=S.Uslop; onset=S.onset; Uw=S.Uw; Uori = S.Uori;
 urgmax=S.urgmax;
 
-%Logic matrix to expand stimuli wrt T
-timeLogiMat = zeros(15,T);
+%Matrix to expand stimuli wrt T with linspace
+timeStimMat = zeros(15,T);
 i = 1;
 
 for bin = onset:jumpT:T
-   if i < 15    
-     timeLogiMat(i,bin:bin+jumpT-1) = 1;
+   if i == 1    
+     timeStimMat(i,bin:bin+jumpT-1) = linspace(0,1,jumpT);
+   elseif i<15 && i>1
+     timeStimMat(i,bin:bin+jumpT-1) = linspace(0,1,jumpT);
+     timeStimMat(i-1,bin:bin+jumpT-1) = linspace(1,0,jumpT);
    else
-     timeLogiMat(i,bin:end) = 1;
+       timeStimMat(i,bin:end) = 1;
      break;
    end
    i = i+1;
@@ -28,28 +31,29 @@ if ~S.exRan
 else
 	if ~c
     		nstim   = Stim.nbStimR;       % Number of stim of chosen 
-    		idx = randi(nstim,[nbEx,1]); %Select nbEx random integer within nstim
+    		idx = randi(nstim,[nbEx,1]);  %Select nbEx random integer within nstim
 	else    
-    		lenC = cellfun('length',Stim.idx(S.c));
-    		repD = ceil( ones(1,length(lenC))./lenC * max(lenC));    
+    		lenC = cellfun('length',Stim.idx(S.c)); % Number of stim in each class
+    		repD = ceil( ones(1,length(lenC))./lenC * max(lenC)); % Factor to reshape
     	
-    		stUnpck  = Stim.idx(S.c);
-    		for i = 1:length(stUnpck)
-			stUnpck{i} = repmat(stUnpck{i},repD(i),1);
+    		stUnpck  = Stim.idx(S.c); % Unpacking stimuli
+            
+    		% Reshaping for more similar number of trials
+            for i = 1:length(stUnpck)
+                stUnpck{i} = repmat(stUnpck{i},repD(i),1);
     		end
 	  				
-    		stimList = vertcat(stUnpck{:}); 
-    		perms    = randi(length(stimList),nbEx,1);
-    		idx      = stimList(perms);
+    		stimList = vertcat(stUnpck{:});             % List of stimuli
+    		perms    = randi(length(stimList),nbEx,1);  % random stimuli
+    		idx      = stimList(perms);                 % Selecting stimuli
 	end
 end
+   
 
-   
-stimAll = Stim.stimRawR*timeLogiMat;   %Stimuli from c expanded wrt T
-   
-   
+%Stimuli from c expanded wrt T
+stimAll = Stim.stimRawR*timeStimMat;
+
 %Choosing examples
-
 stim = stimAll(idx,:);
    
 %% Urgency   
