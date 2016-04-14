@@ -2,9 +2,18 @@ function stateSpace(X,comps,conds)
 % StateSpace will plot the neural activity for each cond projected on the 
 % first 3 components in comps found by PCA. 
 
-% Stack cells wrt fields 
-Xfr = stackStruct(X);  % stackStruct is adapted to this FR format
+if nargin == 1
+    comps = 1:6;
+    conds = 1:6;
+end
 
+% Stack cells wrt fields
+Xnet = cell(length(X),1);
+for net = 1:length(X)
+    Xnet{net} = stackStruct(X{net});  % stackStruct is adapted to this FR format
+end
+Xfr = stackStruct(Xnet);
+    
 % Symetrise cells for left direction
 % X2fr = Xfr;
 X2fr = symCells(Xfr);
@@ -15,19 +24,13 @@ N = size(X2fr.PMd,1);
 T = size(X2fr.PMd,2);
 C = size(X2fr.PMd,3);
 
-if nargin == 1
-    comps = [1,2,3,4,5,6];
-    conds = [1:C];
-end
-
-
 % Normalizing for max FR
 X2fr = structfun( @(X) sqrt(X),X2fr, ... 
                   'UniformOutput', false);
 
 fn = fieldnames(X2fr); 
 for f = 1:length(fn)
-    Xresh.(fn{f}) = reshape(X2fr.(fn{f})(:,1:75,:),N,(T-5)*C);
+    Xresh.(fn{f}) = reshape(X2fr.(fn{f})(:,5:T-7,:),N,(T-7-4)*C);
     [loads.(fn{f}),scores.(fn{f}),latent.(fn{f})] = pca(Xresh.(fn{f})'); 
 end
  
@@ -40,7 +43,7 @@ for f = 1:length(fn)
         for cond = conds
             a = a+1;
             build.(fn{f})(:,comp,a) =  sum( diag(loads.(fn{f})(:,comp))*...
-                                            X2fr.(fn{f})(:,1:75,cond) )';
+                                            X2fr.(fn{f})(:,5:T-7,cond) )';
         end
     end
 end
@@ -111,7 +114,7 @@ function X2 = symCells(X)
 fn = fieldnames(X); 
 
 N  = size(X.(fn{1}),1);
-T  = size(X.(fn{1}),2);
+% T  = size(X.(fn{1}),2);
 C  = size(X.(fn{1}),3);
     
 

@@ -2,36 +2,40 @@
 % script for all the figures
 
 figure(99)
+
+time = linspace(0,S.T*S.dt,S.T);
+
 %% Stimuli
 subplot(4,1,1); 
-plot(sign(S.stimW)*stimTrial(trial,:),'x','linewidth',1); hold on;
+plot(time,sign(S.stimW)*stimTrial(trial,:),'x','linewidth',1); hold on;
 plot(zeros(S.T,1),'m');                      
-plot(S.onset,-16:001:16,'xk'); hold off
-
+plot(S.onset*S.dt,-16:001:16,'xk'); hold off
 
 title('Stimuli');
 ylabel('Token right - Token Left');
 xlabel('time (ms)');
-xlim([0,S.T])
+xlim([0,S.T*S.dt])
 ylim([-16,16])
 
 %% Prefered direction VS non prefered
 subplot(4,1,2)
 if ~commit(trial)
-    plot(mean(PMd_(npref,:)),'r','linewidth',2); hold on
-    plot(mean(PMd_(pref ,:)),'g','linewidth',2);
+    plot(time,mean(PMd_(npref,:)),'r','linewidth',2); hold on
+    plot(time,mean(PMd_(pref ,:)),'g','linewidth',2);
 else
-    plot(mean(PMd_(npref,1:min(abs(commit(trial))+S.aftcmt/S.dt,S.T))),'r','linewidth',2); hold on
-    plot(mean(PMd_(pref, 1:min(abs(commit(trial))+S.aftcmt/S.dt,S.T))),'g','linewidth',2);
+    timeTrial = floor(1:min(abs(commit(trial)/S.dt)+S.aftcmt,S.T));
+    plot(time(timeTrial), mean(PMd_(npref,timeTrial)),'r','linewidth',2); hold on
+    plot(time(timeTrial), mean(PMd_(pref, timeTrial)),'g','linewidth',2);
 end
-plot(S.onset,0:001:S.beta,'xk'); hold off
+plot(S.onset*S.dt,0:01:S.beta,'xk'); 
+plot(abs(commit(trial)/S.dt),0:2:S.beta,'xb'); hold off
 
 % set(gca,'Linewidth',3);
 % set(gca,'FontSize',12);
 title('Prefered direction VS non prefered');
 xlabel('time (ms)');
 ylabel('activation');
-xlim([0,S.T])
+xlim([0,S.T*S.dt])
 ylim([0,101])
 
 

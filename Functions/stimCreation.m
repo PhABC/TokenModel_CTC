@@ -28,7 +28,7 @@ Stim.stimRawR = Stim.stimRaw(Stim.stimRaw(:,end)>0,:);
 
 %% Calculating the probability of success
 nbRightR   = nbRight(Stim.stimRaw(:,end)>0,:);
-Stim.probR      = probRight(nbRightR);             %Probability if answer right (>0)
+Stim.probR = probRight(nbRightR);             %Probability if answer right (>0)
 
 %% Stimulis classification Definitions
 %Defining the rules for each category
@@ -47,11 +47,11 @@ Stim.def{1}  = [ 0, 0.6, 0,0, 0.75, 0,0, 0.75, 0, 0.8, 0,0, 0.9, 0, 0.5  ; ...
 
 %Misleading trials                      
 Stim.def{2}  = [ 0,0,  0,  0,0,0,0,0,0,0,0,0,0,0, 0.5 ; ...
-                 0,0, 0.3, 0,0,0,0,0,0,0,0,0,0,0,  0 ];
+                 0,0, 0.4, 0,0,0,0,0,0,0,0,0,0,0,  0 ];
 
 %Ambiguous trials
-Stim.def{3}  = [ 0,  0.4, 0.38 ,0, 0.55, 0, 0.55, 0,0,0,0,0.4,0,0, 0.5  ; ...
-                 0,  0.6, 0.65, 0, 0.66, 0, 0.66, 0,0,0,0,0.6,0,0,  0  ];
+Stim.def{3}  = [ 0,  0.4, 0.38, 0, 0.35, 0, 0.35, 0,0,.45,0,0,0,0, 0.5  ; ...
+                 0,  0.6, 0.65, 0, 0.66, 0, 0.65, 0,0,.55,0,0,0,0,  0  ];
 
 %% Classifying                
 nonclass = ones(Stim.nbStimR ,1);
@@ -78,6 +78,15 @@ Stim.nbStim{1} = length(Stim.idx{1});
 Stim.nbStim{2} = length(Stim.idx{2});
 Stim.nbStim{3} = length(Stim.idx{3});
 Stim.nbStim{4} = length(Stim.idx{4});
+
+%Show possible prob at each token
+uniProb = zeros(8,15);
+for c = 1:15
+    uni  = unique(Stim.probR(:,c));
+    nUni = length(uni);
+    
+    uniProb(1:nUni,c) = uni;
+end
 
 end
 

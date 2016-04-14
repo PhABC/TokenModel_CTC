@@ -1,71 +1,109 @@
-function [FR,commit]  = trialLoop(S,net,hnorm,W,Uall,stimTrial,SG,Stim,idxStim,Gtime)
-
-Dat.PMd = cell(S.nbEx,1);
-Dat.M1  = cell(S.nbEx,1);
-
-commit   = zeros(S.nbEx,1);
-nbTokens = zeros(S.nbEx,1);
+function [FR,allcommit]  = trialLoop(S,net,hnorm,W,stimTrial,Stim,idxStim,Gtime)
+% Simulation with all trials
 
 tic
+batchSize = 1000;
 
-for trial = 1:S.nbEx
+%Will split trials to save RAM
+nBatch  = floor(S.nbEx/batchSize);  %Number of batches of size batchSize
+resi    = mod(S.nbEx,batchSize);    %Residual trials for last batch
 
-    % stimuli preferences are also assigned in the following fct
-    [St,V,U,pref,npref]=TrialInput(S,trial,hnorm,SG,stimTrial,Uall);
-    [ PMd_,M1_,commit(trial)] = CTCsim(S,W,St,V,U,pref,npref);     
-    
-    if S.printDec 
-
-        %Number of tokens (15 is the max)
-        nbTokens(trial) =  floor((abs(commit(trial))-S.onset)/S.jumpT)+1;
-        if nbTokens(trial) > 15; nbTokens(trial) = 15; end
-
-        fprintf('      Trial :   %d of %d    ~    Decision :   ',trial,S.nbEx)
-
-        if commit(trial) > 0
-            fprintf('Correct   (tokens: %d)\n', nbTokens(trial));
-        elseif commit(trial) < 0
-            fprintf('Incorrect (tokens: %d)\n', nbTokens(trial));
-        else 
-            fprintf('--- \n')
-        end
-
-    end
-
-    %Figures
-    if S.plotting || trial == 1
-       FigureCTC
-    end
-    
-    if S.nbEx > 100
-        if ~mod(trial,S.nbEx/10)
-            fprintf('\n       -------------------------------------------------------\n')
-            fprintf('             Net #%d                Time : %s\n', net, sec2hms(toc(Gtime)));
-            fprintf('       -------------------------------------------------------\n\n')
-         end
-    end
-
-    if S.record == 1
-        %Only outputting values of prefered neurons
-        Dat.PMd{trial} = PMd_(logical(pref+npref), S.stRec: ...
-                              min(abs(commit(trial))+S.aftcmt,S.T));
-        Dat.M1{trial}  =  M1_(logical(pref+npref), S.stRec: ...
-                              min(abs(commit(trial))+S.aftcmt,S.T)); 
-    elseif S.record == 2
-       %Outputting values of all neurons
-       Dat.PMd{trial} = PMd_(:,S.stRec:min(abs(commit(trial))+S.aftcmt,S.T));
-       Dat.M1{trial}  =  M1_(:,S.stRec:min(abs(commit(trial))+S.aftcmt,S.T));
-    end
-
+% Defining all batches size
+if resi > 0
+    batches = horzcat(ones(1,nBatch)*batchSize,resi);
+else
+    batches = ones(1,nBatch)*batchSize;             
 end
 
-Dat.commit   = commit  ;
-Dat.nbTokens = nbTokens;
+totTrial = 1; %Total number of trials
 
-if S.pcaForm == 1
-    FR = pcaFormat(S.nbins,S.startBin,S.aftcmt,Dat,Stim,idxStim);
-else
-    FR = Dat;
+% Will contain all commits and concatenate them
+allcommit = [];
+
+for batch = 1:length(batches)
+    %Number of trial in the batch
+    ntrial = batches(batch); 
+    
+    %Initializing
+    Dat.PMd = cell(ntrial,1);
+    Dat.M1  = cell(ntrial,1);
+    commit   = zeros(ntrial,1);
+    nbTokens = zeros(ntrial,1);
+    
+    idxStimBatch = idxStim(totTrial:totTrial+ntrial-1);
+    
+    for trial = 1:ntrial
+        totTrial     = batchSize*(batch-1) + trial; 
+         
+        
+        % stimuli preferences are also assigned in the following fct
+        [St,V,U,pref,npref]=TrialInput(S,trial,hnorm,stimTrial);
+        [ PMd_,M1_,commit(trial)] = CTCsim(S,W,St,V,U,pref,npref);     
+
+        if S.printDec 
+
+            %Number of tokens (15 is the max)
+            nbTokens(trial) =  floor((abs(commit(trial)/S.dt)-S.onset)/S.jumpT)+1;
+            if nbTokens(trial) > 15; nbTokens(trial) = 15; end
+            
+            fprintf('      Trial :   %d of %d    ~    Decision :   ',totTrial,S.nbEx)
+
+            if commit(trial) > 0
+                fprintf('Correct   (tokens: %d)\n', nbTokens(trial));
+            elseif commit(trial) < 0
+                fprintf('Incorrect (tokens: %d)\n', nbTokens(trial));
+            else 
+                fprintf('--- \n')
+            end
+
+        end
+
+        %Figures
+        if S.plotting || trial == 1
+           FigureCTC
+        end
+
+        if S.nbEx > 100
+            if ~mod(totTrial,S.nbEx/10)
+                fprintf('\n       -------------------------------------------------------\n')
+                fprintf('             Net #%d                Time : %s\n', net, sec2hms(toc(Gtime)));
+                fprintf('       -------------------------------------------------------\n\n')
+             end
+        end
+
+        %Window of time to record
+        timeCom = floor(S.stRec:min(abs(commit(trial)/S.dt)+S.aftcmt,S.T));
+
+        %Sample recording
+        if S.record == 1
+        %Only outputting values of prefered neurons
+            Dat.PMd{trial} = PMd_(logical(pref+npref),timeCom);
+            Dat.M1{trial}  =  M1_(logical(pref+npref),timeCom); 
+        elseif S.record == 2
+        %Outputting values of all neurons
+            Dat.PMd{trial} = PMd_(:,timeCom);
+            Dat.M1{trial}  =  M1_(:,timeCom);
+        end
+
+%         if S.pcaForm == 1
+%               FR = pcaFormat(S.nbins,S.startBin,S.aftcmt,Dat,Stim,idxStim);
+%         else
+%               FR = Dat;
+%         end  
+    end
+
+%     Dat.commit   = vertcat(Dat.commit,commit);
+%     Dat.nbTokens = vertcat(Dat.nbTokens,nbTokens);
+
+    Dat.commit   = commit;
+    Dat.nbTokens = nbTokens;
+
+    if S.pcaForm == 1
+        FR{batch} = pcaFormat(S.nbins,S.startBin,S.aftcmt,Dat,Stim,idxStimBatch);
+    else
+        FR{batch} = Dat;
+    end
+    allcommit = vertcat(allcommit,commit);
 end
 
 
@@ -157,7 +195,7 @@ end %Debug trigger
     end
 
     %To let run the simulation a bit longer.
-    if t == abs(commit)+S.aftcmt && commit ~= 0
+    if s == abs(floor(commit/S.dt))+S.aftcmt && commit ~= 0
 	    break
     end
 

@@ -1,4 +1,4 @@
-function [ Uall,stim,SG,idx,S ] = ExtInputs(S,Stim)
+function [stim,idx,S] = ExtInputs(S,Stim)
 %% External inputs
     %All the inputs not coming from the neural activity
 
@@ -55,45 +55,27 @@ stimAll = Stim.stimRawR*timeStimMat;
 
 %Choosing examples
 stim = stimAll(idx,:);
-   
-%% Urgency   
-%Baseline urgency signal
-   Uend = (T-onset)*Uslop;       %Last point of linear function wrt T
-   urg  = zeros(nbEx,T);  
-   urg(:,1:onset)   = Uori;
-   urg(:,onset:end) = repmat(linspace(Uori,Uend,T-onset+1),... 
-                             [nbEx,1]);      % Urgency starts at stim onset
+%    
+% %% Urgency   
+% %Baseline urgency signal
+%    Uend = (T-onset)*Uslop;       %Last point of linear function wrt T
+%    urg  = zeros(nbEx,T);  
+%    urg(:,1:onset)   = Uori;
+%    urg(:,onset:end) = repmat(linspace(Uori,Uend,T-onset+1),... 
+%                              [nbEx,1]);      % Urgency starts at stim onset
+% 
+% %Creating gauss distribution   
+% if S.URtrial(1)
+%    urg  = urg  + urg  .* repmat(S.URtrial(2)*randn(nbEx,1),1,T) + ...  % Random slopes
+%           Uori + Uori .* repmat(S.URtrial(2)*randn(nbEx,1),1,T);    	             % Random origins
+% end
+% 
+%    urg(urg<0) = 0;                                        % Del values < 0
+% 
+%    urg = urg*Uw;
+%    urg(urg>urgmax) = urgmax; %max urg 
+%     
 
-%Creating gauss distribution   
-if S.URtrial(1)
-   urg  = urg  + urg  .* repmat(S.URtrial(2)*randn(nbEx,1),1,T) + ...  % Random slopes
-          Uori + Uori .* repmat(S.URtrial(2)*randn(nbEx,1),1,T);    	             % Random origins
-end
-
-   urg(urg<0) = 0;                                        % Del values < 0
-
-   urg = urg*Uw;
-   urg(urg>urgmax) = urgmax; %max urg 
-
-%% Slow noise
-    tauSG = 500;                          % time constant of slow noise in ms
-    noise = randn(nbEx,T/(tauSG/dt)+1);
-    
-    step = tauSG/dt; 
-    
-    SG = zeros(nbEx,T);
-    i = 1; 
-    
-    %Expanding slow noise
-    for t = 1:step:T
-        SG(:,t:t+step-1) = linspaceMat(noise(:,i),noise(:,i+1),step);
-        i=i+1;
-    end
-    
-    %Smoothing out noise
-    for ex = 1:nbEx
-        SG(ex,:) = smooth(SG(ex,:),100/dt);
-    end
 
 %% Adding randomness to parameters
     
@@ -110,22 +92,22 @@ else
     S.SHIFT = repmat(S.Fshift,N,1);
 end
 
-% Urgency
-Uall.PMd = cell(S.nbEx,1);
-Uall.M1 = cell(S.nbEx,1);
-
-if S.URneur(1) == 1
-    
-   % PMd & M1 slopes factors
-   sl = randParam([1,1],S.URneur(2),N); 
-    
-    for t = 1:S.nbEx
-
-        % PMD & M1 slopes
-        Uall.PMd{t} = repmat(urg(t,:),N,1) .* repmat(sl(:,1),1,T);
-         Uall.M1{t} = repmat(urg(t,:),N,1) .* repmat(sl(:,2),1,T); 
-    end
-    
-end 
+% % Urgency
+% Uall.PMd = cell(S.nbEx,1);
+% Uall.M1 = cell(S.nbEx,1);
+% 
+% if S.URneur(1) == 1
+%     
+%    % PMd & M1 slopes factors
+%    sl = randParam([1,1],S.URneur(2),N); 
+%     
+%     for t = 1:S.nbEx
+% 
+%         % PMD & M1 slopes
+%         Uall.PMd{t} = repmat(urg(t,:),N,1) .* repmat(sl(:,1),1,T);
+%          Uall.M1{t} = repmat(urg(t,:),N,1) .* repmat(sl(:,2),1,T); 
+%     end
+%     
+% end 
 
 

@@ -46,7 +46,7 @@ for f = 1:length(fn)-2
     DatC = classTrialCommit(goodTr, Stim, goodIdx,goodNTok);  %wrt to commit
    %DatC =  classTrialStart(goodTr, Stim, goodIdx);           %wrt onset
 
-    for c = 1:length(Stim.logIdx)              
+for c = 1:length(Stim.logIdx)              
        if ~isempty(DatC{c})
           if ~isempty(DatC{1})
               FR.(fn{f})(:,:,c) = meanTrial(DatC{c});                 
@@ -77,14 +77,20 @@ function D = classTrialCommit(Tr, Stim, Idx, nbTokens)
 % Defining the rules for each category with respect to commitment
 
 %Easy trials
-    % Last 7 tokens if at least 4 are > 0.5, including most recent one
-    eLogi = [ .5, .5, .5, .5, .5, .5, .5];  % Bigger than
+    % Last 7 tokens if at least eMin are > 0.5, including most recent one
+    eMin  = 5;
+    eLogi = [ 5, .5, .5, .5, .6, .6, .7];  % Bigger than
 %Misleading trials      
-    % Last 7 tokens if at least 3 are < 0.5 with most recent one > 0.5
-    mLogi = [ .5, .5, .5, .5, .5, .5,  0];  % Smaller than
+    % Last 7 tokens if at least mMin are < 0.5 with most recent one > 0.5
+    mMin  = 4;
+    mLogi = [ .4, .5, .5, .5, .5, .5, .6];  % Smaller than
 %Ambiguous trials
-    % Last 7 tokens if at least 3 are == 0.5 with most recent >= 0.5
-    aLogi = [ .5, .5, .5, .5, .5, .5, .5 ];  % Equal to
+    % Last 7 tokens if at least aMin are == 0.5 with most recent >= 0.5 and
+    % at leat 1 < .5 and 1 > .5 
+    aMinEq = 2; 
+    aMinLs = 1;
+    aMinMr = 1;
+    aLogi = [ 0,.5, .5, .5, 0, 0, .5 ];  % Equal to
 
 %% Classification 
 % NOTE :
@@ -105,26 +111,37 @@ nTrials = length(Tr); % Size of each field
 D = cell(4,1);
 
 for t = 1:nTrials
-   
+    a = 0;
+    
     startTok = nbTokens(t)-6; 
     if startTok <= 0; startTok = 1; end  %look at past seven if at least 7
     
     % Contains last 7 (or less) token probabilities
-    prob7 = Stim.probR(Idx(t),startTok:nbTokens(t)); 
+    prob7 = Stim.probR(Idx(t),startTok:nbTokens(t));
     nprob = length(prob7);
     
+    if nprob < eMin
+        a = 1;
+        eMin = eMin -1;
+    end
+    
+    diffA = prob7 - aLogi(8-nprob:end);
+    
     %Misleading  trials
-    if  sum(prob7 < mLogi(8-nprob:end)) >= 3 && prob7(end) > 0.5        
+    if  sum(prob7 < mLogi(8-nprob:end)) >= mMin && prob7(end) > mLogi(end)       
        
         D{2} = vertcat(D{2},Tr(t));
         
     %Ambiguous trials
-    elseif sum(prob7 == aLogi(8-nprob:end)) >= 3 && prob7(end) >= 0.5   
+    elseif sum((diffA ~= prob7)&(diffA<0)) >= aMinLs && ... 
+           sum( diffA == 0 )               >= aMinEq && ...
+           sum((diffA ~= prob7)&(diffA>0)) >= aMinMr && ...
+           prob7(end) >= aLogi(end)     
         
         D{3} = vertcat(D{3},Tr(t));
     
     %Easy trials
-    elseif sum(prob7 > eLogi(8-nprob:end)) >= 3 && prob7(end) > 0.5
+    elseif sum(prob7 > eLogi(8-nprob:end)) >= eMin && prob7(end) > eLogi(end)
         
         D{1} = vertcat(D{1},Tr(t));
     
@@ -133,6 +150,10 @@ for t = 1:nTrials
    
         D{4} = vertcat(D{4},Tr(t));  
    
+    end
+    
+    if a == 1
+        eMin = eMin +1;
     end
     
 end
