@@ -59,14 +59,14 @@ xlabel('Time')
 subplot(2,2,2); hold on
 title('Easy vs Misleading vs Ambiguous')
       %Easy
-[yeasyH, xeasyH] = hist(DatC.comAbs{1},10);
-plot(xeasyH,yeasyH/numel(DatC.commit{1}),'b'); hold on;
+[yeasyH, xeasyH] = hist(DatC.comAbs{1}(DatC.comAbs{1} > 0),40);
+plot(xeasyH,yeasyH/numel(DatC.commit{1}(DatC.comAbs{1} > 0)),'b'); hold on;
       %Misleading
-[ymisH,xmisH ]   = hist(abs(DatC.commit{2}),10);
-plot(xmisH,ymisH/numel(DatC.comAbs{2}),'r'); hold on;
+[ymisH,xmisH ]   = hist(abs(DatC.commit{2}(DatC.comAbs{2} > 0)),40);
+plot(xmisH,ymisH/numel(DatC.comAbs{2}(DatC.comAbs{2} > 0)),'r'); hold on;
       %Ambiguous
-[yambiH,xambiH] = hist(DatC.comAbs{3},10);
-plot(xambiH,yambiH/numel(DatC.comAbs{3}),'g'); hold on;
+[yambiH,xambiH] = hist(DatC.comAbs{3}(DatC.comAbs{3} > 0),40);
+plot(xambiH,yambiH/numel(DatC.comAbs{3}(DatC.comAbs{3} > 0)),'g'); hold on;
 legend('Easy','Misleading','Ambiguous')
 xlabel('Time')
 
@@ -95,9 +95,9 @@ plot(uni_prop{3},cumulProp{3}*100,'g'); hold on;
 xlabel('Success probability at decision')
 ylabel('Cumulative % of trials')
 
-meanE = round(mean(DatC_ok.probR_com{1})*100);
-meanM = round(mean(DatC_ok.probR_com{2})*100);
-meanA = round(mean(DatC_ok.probR_com{3})*100);
+meanE = round(nanmean(DatC_ok.probR_com{1})*100);
+meanM = round(nanmean(DatC_ok.probR_com{2})*100);
+meanA = round(nanmean(DatC_ok.probR_com{3})*100);
 
 legend(['Easy       ~ Mean = ', num2str(meanE)],...
        ['Misleading ~ Mean = ', num2str(meanM)], ...
