@@ -52,9 +52,7 @@ for c = 1:length(Stim.logIdx)
               FR.(fn{f})(:,:,c) = meanTrial(DatC{c});                 
           end
        end
-    end
- 
-    
+    end   
 end
 
 FR.Idx      = goodIdx;
@@ -68,8 +66,6 @@ function FR = meanTrial(D)
 stackD  = cat(3,D{:});
 FR      = nanmean(stackD,3);
 
-
-		 
 function D = classTrialCommit(Tr, Stim, Idx, nbTokens)
 % Will classify trials in respective category based on commitment time
 
@@ -82,8 +78,8 @@ function D = classTrialCommit(Tr, Stim, Idx, nbTokens)
     eLogi = [ 5, .5, .5, .5, .6, .6, .7];  % Bigger than
 %Misleading trials      
     % Last 7 tokens if at least mMin are < 0.5 with most recent one > 0.5
-    mMin  = 4;
-    mLogi = [ .4, .5, .5, .5, .5, .5, .6];  % Smaller than
+    mMin  = 3;
+    mLogi = [ .4, .5, .5, .5, .5, .0, .6];  % Smaller than
 %Ambiguous trials
     % Last 7 tokens if at least aMin are == 0.5 with most recent >= 0.5 and
     % at leat 1 < .5 and 1 > .5 
@@ -147,7 +143,6 @@ for t = 1:nTrials
     
     %Other trials
     else 
-   
         D{4} = vertcat(D{4},Tr(t));  
    
     end

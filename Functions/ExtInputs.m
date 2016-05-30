@@ -91,23 +91,3 @@ if S.RFshift(1) ==1
 else
     S.SHIFT = repmat(S.Fshift,N,1);
 end
-
-% % Urgency
-% Uall.PMd = cell(S.nbEx,1);
-% Uall.M1 = cell(S.nbEx,1);
-% 
-% if S.URneur(1) == 1
-%     
-%    % PMd & M1 slopes factors
-%    sl = randParam([1,1],S.URneur(2),N); 
-%     
-%     for t = 1:S.nbEx
-% 
-%         % PMD & M1 slopes
-%         Uall.PMd{t} = repmat(urg(t,:),N,1) .* repmat(sl(:,1),1,T);
-%          Uall.M1{t} = repmat(urg(t,:),N,1) .* repmat(sl(:,2),1,T); 
-%     end
-%     
-% end 
-
-

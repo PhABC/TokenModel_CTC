@@ -2,7 +2,7 @@ function [FR,allcommit]  = trialLoop(S,net,hnorm,W,stimTrial,Stim,idxStim,Gtime)
 % Simulation with all trials
 
 tic
-batchSize = 1000;
+batchSize = 1000; % Number of trials per batch ~ to save RAM
 
 %Will split trials to save RAM
 nBatch  = floor(S.nbEx/batchSize);  %Number of batches of size batchSize
@@ -15,12 +15,13 @@ else
     batches = ones(1,nBatch)*batchSize;             
 end
 
+nBatch   = length(batches);
 totTrial = 1; %Total number of trials
 
 % Will contain all commits and concatenate them
 allcommit = [];
 
-for batch = 1:length(batches)
+for batch = 1:nBatch
     %Number of trial in the batch
     ntrial = batches(batch); 
     
@@ -37,8 +38,8 @@ for batch = 1:length(batches)
          
         
         % stimuli preferences are also assigned in the following fct
-        [St,V,U,pref,npref]=TrialInput(S,trial,hnorm,stimTrial);
-        [ PMd_,M1_,commit(trial)] = CTCsim(S,W,St,V,U,pref,npref);     
+        [ St,V,U,pref,npref ]      = TrialInput(S,trial,hnorm,stimTrial);
+        [ PMd_,M1_,commit(trial) ] = CTCsim(S,W,St,V,U,pref,npref);     
 
         if S.printDec 
 
@@ -59,7 +60,7 @@ for batch = 1:length(batches)
         end
 
         %Figures
-        if S.plotting || trial == 1
+        if S.plotting || trial == 1 && batch == 1  
            FigureCTC
         end
 
@@ -104,7 +105,41 @@ for batch = 1:length(batches)
         FR{batch} = Dat;
     end
     allcommit = vertcat(allcommit,commit);
+    
+    FR{batch}.pref  = pref';
+    FR{batch}.npref = npref';
 end
+
+% Batch averaging weighted by number of trials per batch
+if S.pcaForm && nBatch > 1
+	
+	ntList = zeros(nBatch,1); %nb of trials for each batch
+
+	for b = 1:nBatch
+		ntList(b)=length(FR{b}.Idx);
+	end
+
+	ntTot  = sum(ntList); %Total number of good trials	
+	
+	%Weighting average and stacking
+	FRtmp = FR{1};
+	FRtmp.PMd = FR{1}.PMd*(ntList(1)/ntTot);
+	FRtmp.M1  = FR{1}.M1 *(ntList(1)/ntTot);
+	
+	for b = 2:nBatch
+	    FRtmp.PMd(:,:,:,b) = FR{b}.PMd*(ntList(b)/ntTot);
+	    FRtmp.M1(:,:,:,b)  = FR{b}.M1*(ntList(b)/ntTot);
+	    FRtmp.Idx = vertcat(FRtmp.Idx,FR{b}.Idx);
+	    FRtmp.Com = vertcat(FRtmp.Com,FR{b}.Com);
+	    FRtmp.nbTokens = vertcat(FRtmp.nbTokens,FR{b}.nbTokens);
+	end
+	
+	FRtmp.PMd = nansum(FRtmp.PMd,4); % Summation part of weighted averaging
+	FRtmp.M1 = nansum(FRtmp.M1,4);	 % Summation part of weighted averaging
+
+	FR = FRtmp;
+end
+
 
 
 function [A1,A2,commit] = CTCsim(S,W,St,V,U,pref,npref) %% Simulation
@@ -134,6 +169,7 @@ for s=1:T
     s_wY2 = W{2,1}*M1_A ;
 
     %Unpacking W matrix into excitation and inhibition
+
     KE1 =  W{1,1}; KE1(KE1<0) = 0;
     KI1 = -W{1,1}; KI1(KI1<0) = 0;
 
@@ -176,6 +212,10 @@ end %Debug trigger
 
     X1 = X1 + dX1*dt;
     X2 = X2 + dX2*dt;
+
+ % Min value of 0
+    X1(X1<0) = 0;
+    X2(X2<0) = 0;
 
     A1(:,s) = X1;
     A2(:,s) = X2;

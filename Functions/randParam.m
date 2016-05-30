@@ -2,7 +2,7 @@ function Y = randParam(X,std,N)
 %% randparam 
 % This function will output random values centered around the values 
 % provided in X with standart deviation of 'std'. The output will be a 
-% matrix Y of dimensions (length(X) by N)
+% matrix Y of dimensions (length(X) by N).
 
 d1 = length(X);
 
@@ -16,5 +16,5 @@ X = repmat(X,N,1);
 R = randn(N,d1)*std;
     
 % Gaussian distributed parameters  
-Y = X + X.*R;
+Y = X + R;
     

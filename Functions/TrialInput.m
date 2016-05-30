@@ -1,10 +1,10 @@
-function [ stim,V,U,pref,npref] = TrialInput(S,trial,hnorm,stimAll)
+function [ stim,V,U,pref,npref ] = TrialInput(S,trial,hnorm,stimAll)
 %% TrialInput
 % Will put all inputs in right format for each trial in the simulation   
 
 %Unpacking fields
 T=S.T; N = S.N; stimW=S.stimW; dt = S.dt; Uw=S.Uw; Uori = S.Uori;
-urgmax=S.urgmax; Uslop=S.Uslop;onset = S.onset;
+USdist = S.USdist; urgmax=S.urgmax; Uslop=S.Uslop;onset = S.onset;
 
 %% Stimuli and orientation preference
 %Orientation for token 
@@ -22,12 +22,12 @@ gaussR = -circshift(gaussL,-m);         % Translation for right angle
 tokG   = gaussL + gaussR;               % Combining left & right  
 
 %Neurons preference with token orientation
-hstim  = hnorm .* repmat(tokG,1,N);             
-pref   = sum(hstim)> .4;
-npref  = sum(hstim)<-.4;
+htune  = hnorm .* repmat(tokG,1,N);            
+pref   = sum(htune)> .4;
+npref  = sum(htune)<-.4;
 
 %Cummulative input for each neurons based on stim and pref 
-stim   = hstim'   * repmat(stimAll(trial,:),360,1) * stimW;
+stim   = htune'   * repmat(stimAll(trial,:),360,1) * stimW;
 
 %Negative values indicate their non prefered direction
 stim(stim<0) = 0;
@@ -78,34 +78,57 @@ urg(onset:end) = repmat(linspace(Uori,Uend,T-onset+1),...
 %Creating gauss distribution   
 if S.URtrial(1)
    urg  = urg  + urg  .* repmat(S.URtrial(2)*randn,1,T) + ...  % Random slopes
-          Uori + Uori .* repmat(S.URtrial(2)*randn,1,T);    	             % Random origins
+          Uori + Uori .* repmat(S.URtrial(2)*randn,1,T);       % Random origins
 end
-
-urg(urg<0) = 0;                                        % Del values < 0
-
-urg = urg*Uw;
-urg(urg>urgmax) = urgmax; %max urg 
-
    
 Uall.PMd = cell(1,1);
 Uall.M1 = cell(1,1);
 
-if S.URneur(1) == 1
-    
-   % PMd & M1 slopes factors
-   sl = randParam([1,1],S.URneur(2),N); 
-    
-    % PMD & M1 slopes
-    Uall.PMd = repmat(urg,N,1) .* repmat(sl(:,1),1,T);
-     Uall.M1 = repmat(urg,N,1) .* repmat(sl(:,2),1,T); 
-    
-end 
+% Applying urgency affinity  
+% The urgency signal tuning can:
+% 	+Random 
+% 	+Function of stimuli tuning solely
+% 	+Function of sitmuli tuning with randomness
+% Randonmess is set by S.URneur(1) in the TokModel script.
+% Urgency tuned wrt stimuli prefererence is set by 
 
+%       Add abs() if only positive urgency signal
+
+
+% Urgency tuning as a function of stimuli tuning
+if S.Utuning
+    %Tuning affinity based on stimuli preferences of neurons
+    Utuning = ( sum(abs(htune))/max(sum(abs(htune)))...  %Normalizing as a function of stim preference
+              + mean(sum(abs(htune))) )';
+
+    % Random urgency tuning
+    Uall.PMd = repmat(urg,N,1) .* repmat(USdist(:,1)+Utuning,1,T);
+     Uall.M1 = repmat(urg,N,1) .* repmat(USdist(:,2)+Utuning,1,T); 
+else
+    % Random urgency tuning
+    Uall.PMd = repmat(urg,N,1) .* repmat(USdist(:,1),1,T);
+     Uall.M1 = repmat(urg,N,1) .* repmat(USdist(:,2),1,T); 
+end
+
+
+%Urgency weigth
+Uall = structfun( @(X) X*Uw, Uall, 'UniformOutput',false);
+
+%Setting boundary 
+% Max value
+Uall.PMd(Uall.PMd >  urgmax) =  urgmax; %max urg 
+ Uall.M1(Uall.M1  >  urgmax) =  urgmax; %max urg 
+% Min value
+Uall.PMd(Uall.PMd < -urgmax) = -urgmax; %max urg 
+ Uall.M1(Uall.M1  < -urgmax) = -urgmax; %max urg 
+
+% To only take positive urgency signals
+% Uall = structfun( @(X) abs(X), Uall, 'UniformOutput',false);
+ 
+%Output structure
 U.PMd = Uall.PMd;
 U.M1  = Uall.M1;
 
-
-  
  
   
   
