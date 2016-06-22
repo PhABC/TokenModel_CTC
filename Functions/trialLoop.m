@@ -21,6 +21,9 @@ totTrial = 1; %Total number of trials
 % Will contain all commits and concatenate them
 allcommit = [];
 
+NetState{1,1} = zeros(S.N,1); NetState{1,2} = zeros(S.N,1);
+NetState{2,1} = zeros(S.N,1); NetState{2,2} = zeros(S.N,1);
+
 for batch = 1:nBatch
     %Number of trial in the batch
     ntrial = batches(batch); 
@@ -30,16 +33,15 @@ for batch = 1:nBatch
     Dat.M1  = cell(ntrial,1);
     commit   = zeros(ntrial,1);
     nbTokens = zeros(ntrial,1);
-    
+
     idxStimBatch = idxStim(totTrial:totTrial+ntrial-1);
     
     for trial = 1:ntrial
         totTrial     = batchSize*(batch-1) + trial; 
-         
-        
+            
         % stimuli preferences are also assigned in the following fct
-        [ St,V,U,pref,npref ]      = TrialInput(S,trial,hnorm,stimTrial);
-        [ PMd_,M1_,commit(trial) ] = CTCsim(S,W,St,V,U,pref,npref);     
+        [ St,V,U,pref,npref ] = TrialInput(S,trial,hnorm,stimTrial);
+        [ PMd_,M1_,commit(trial),St,NetState] = CTCsim(S,W,St,V,U,pref,npref,NetState);     
 
         if S.printDec 
 
@@ -142,7 +144,7 @@ end
 
 
 
-function [A1,A2,commit] = CTCsim(S,W,St,V,U,pref,npref) %% Simulation
+function [A1,A2,commit,St,NetState] = CTCsim(S,W,St,V,U,pref,npref,NetState) %% Simulation
 %% Running the simulation
 
 %Unpacking fields 
@@ -150,14 +152,21 @@ N = S.N; T = S.T; dt = S.dt; tau = S.tau; alpha = S.alpha; beta = S.beta;
 gamma = S.gamma; Tau = S.Tau; Utype = S.Utype; tresh=S.tresh;
 
 % Initialization 
-Y1 = zeros(N,1); Y2 = zeros(N,1);
-X1 = zeros(N,1); X2 = zeros(N,1);
-A1 = zeros(N,T); A2 = zeros(N,T);
 
+% If initializing wiht previous trial network state
+if S.contiTr 
+    X1 = NetState{1,1}; X2 = NetState{1,2};
+    Y1 = NetState{2,1}; Y2 = NetState{2,2};
+else
+    X1 = zeros(N,1); X2 = zeros(N,1);
+    Y1 = zeros(N,1); Y2 = zeros(N,1);
+end
+
+A1     = zeros(N,T); A2 = zeros(N,T);
 commit = 0; %If commit stays 0, it means the network didn't cross tresh
 
 for s=1:T
-        t = (s-1)*dt; % Current time in ms
+    t = (s-1)*dt; % Current time in ms
 
     PMd_A  = fct(Y1,S.STEEP(:,1),S.SHIFT(:,1));  % PMd activity after transfer function
     M1_A   = fct(Y2,S.STEEP(:,2),S.SHIFT(:,2));  % M1  activity after transfer function
@@ -169,7 +178,7 @@ for s=1:T
     s_wY2 = W{2,1}*M1_A ;
 
     %Unpacking W matrix into excitation and inhibition
-
+    %   Could be out of the loop with diff name
     KE1 =  W{1,1}; KE1(KE1<0) = 0;
     KI1 = -W{1,1}; KI1(KI1<0) = 0;
 
@@ -226,17 +235,43 @@ end %Debug trigger
     diffPop = mean(X1(pref)) - mean(X1(npref));
 
     if abs(diffPop) >= tresh && ~commit
-        
-%         downU = linspace(U(:,s),U(:,1), 100);
-%         U(:,s:s+99)   = downU; 
-%         U(:,s+100:end) = U(1,1); 
-        commit = sign(sign(S.stimW)*diffPop)*(t); %Sign indicate direction	
-    
+        %Decaying inputs to network 
+       if S.IDecay; [U,St] = decayInput(S,U,St,s); end
+       commit = sign(sign(S.stimW)*diffPop)*(t); %Sign indicate direction
+    elseif s == T-S.aftcmt 
+        %Decaying inputs to network
+       if S.IDecay; [U,St] = decayInput(S,U,St,s); end      
     end
 
     %To let run the simulation a bit longer.
-    if s == abs(floor(commit/S.dt))+S.aftcmt && commit ~= 0
+    if s == abs(floor(commit/S.dt))+S.aftcmt && commit ~= 0 || s == T
+       %Saving end state of network
+       NetState{1,1} = X1; NetState{1,2} = X2;
+       NetState{2,1} = Y1; NetState{2,2} = Y2;
 	    break
     end
 
 end
+
+
+function [U,St] = decayInput(S,U,St,s)
+% Will decay inputs to birng the network back
+% to the initial equilibrium
+
+   decayT = S.aftcmt-50; %Time for inputs to decay
+
+   %Decay of urgency for PMd
+   downU_PMd = linspaceMat(U.PMd(:,s),U.PMd(:,1), decayT);
+   U.PMd(:,s:s+decayT-1) = downU_PMd; 
+   U.PMd(:,s+decayT:end) = U.PMd(1,1);
+
+   %Decay of urgency for PMd   
+   downU_M1 = linspaceMat(U.M1(:,s),U.M1(:,1), decayT);
+   U.M1(:,s:s+decayT-1) = downU_M1; 
+   U.M1(:,s+decayT:end) = U.M1(1,1);
+  
+   %Decay of stimuli input
+   downS = linspaceMat(St(:,s),St(:,1),decayT);
+   St(:,s:s+decayT-1) = downS;
+   St(:,s+decayT:end) = St(1,1);
+
