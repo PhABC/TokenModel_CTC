@@ -17,23 +17,26 @@ tic
 
 % Seed allow you to replay the same trial. Comment out 'seed' if you want to
 % reuse the previous trial. 
-% seed = rng;     % Saving seed (Comment out to reuse previous seed)
+seed = rng;     % Saving seed (Comment out to reuse previous seed)
 rng(seed)         % Loading seed
 
 saveData = 1;     % Will save FR in current dir if == 1
 
 %% Simulation parameters
 S.N      = 300;  % Nb of neurons per layer
-S.T      = 1000; % Simulation time in ms
+S.T      = 2600; % Simulation time in ms
 S.tresh  = 35;	 % Difference between the 2 populations for commitment time
 
-S.nbEx    = 1000;  % Number of stimuli examples to present
+S.nbEx    = 5;  % Number of stimuli examples to present
 S.nbNet   = 1; 	  % Number of different networks (neurons with different parameters
 S.record  = 2;	  % if == 1, only core neurons will be recorded | if == 2, all neurons will be recorded
-S.pcaForm = 1;    % Transform data into PCA compabtible format
+S.pcaForm = 0;    % Transform data into PCA compabtible format
+
+S.IDecay  = 1;    % If input to neurons decay after decision is made (urgency and stimulus)
+S.contiTr = 1;    % Trials will start with the previous trial state  
 
 S.onset  = 100; % onset of trial in ms
-S.aftcmt = 50;  % Time to stop the trial after commitment
+S.aftcmt = 1000;  % Time to stop the trial after commitment
 S.stRec  = 100; % Time to start recording at. Skipping the first ms of instability in the simulation
 S.dt     = 1;    
 S.tau    = 0.005; 
@@ -107,7 +110,7 @@ S.wType = 0;
 %% Input parameters
 
 % Stimuli parameters (defined apriori, WRT stimuli onset, not commit)
-S.c     = [1,2,3]; % Classes : 0 = All       | 1 = Easy   | 2 = Misleading 
+S.c     = [2,3]; % Classes : 0 = All       | 1 = Easy   | 2 = Misleading 
                    %           3 = Ambiguous | 4 = Others   
                    % S.c also accepts vector ( e.g [1.2] )
                     
